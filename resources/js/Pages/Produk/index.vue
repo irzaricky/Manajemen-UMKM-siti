@@ -2,6 +2,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 import { computed } from "vue";
+import { Inertia } from "@inertiajs/inertia";
 
 // Props dari server
 const props = defineProps({
@@ -10,6 +11,14 @@ const props = defineProps({
 
 // Daftar produk dari props paginasi
 const produkList = computed(() => props.produks.data);
+
+// Fungsi untuk menghapus produk dengan konfirmasi
+function deleteProduct(produk) {
+    if (confirm(`Apakah Anda yakin ingin menghapus produk "${produk.nama}"?`)) {
+        // Memanggil Inertia untuk menghapus produk
+        Inertia.delete(route("dashboard.produk.delete", produk.id));
+    }
+}
 </script>
 
 <template>
@@ -122,14 +131,7 @@ const produkList = computed(() => props.produks.data);
                                             Edit
                                         </Button>
                                         <Button
-                                            @click="
-                                                $inertia.get(
-                                                    route(
-                                                        'dashboard.produk.delete',
-                                                        produk.id
-                                                    )
-                                                )
-                                            "
+                                            @click="deleteProduct(produk)"
                                             class="font-bold py-2 px-4 rounded bg-red-500 hover:bg-red-700"
                                         >
                                             Hapus

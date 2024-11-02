@@ -32,7 +32,7 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
         Route::put('/{id}', [ProdukController::class, 'update'])->name('dashboard.produk.update');
         Route::get('/create', [ProdukController::class, 'create'])->name('dashboard.produk.create');
         Route::post('/store', [ProdukController::class, 'store'])->name('dashboard.produk.store');
-        Route::get('/delete/{id}', [ProdukController::class, 'destroy'])->name('dashboard.produk.delete');
+        Route::delete('/delete/{id}', [ProdukController::class, 'destroy'])->name('dashboard.produk.delete');
     });
 
 });
