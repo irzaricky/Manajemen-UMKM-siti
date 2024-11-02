@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProdukController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -18,9 +19,23 @@ Route::get('/', function () {
     return Inertia::render('Auth/Login');
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+
+
+Route::group(['middleware' => 'auth', 'verified'], function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
+
+    Route::prefix('/dashboard/produk')->group(function () {
+        Route::get('/', [ProdukController::class, 'index'])->name('dashboard.produk.index');
+        Route::get('/edit', [ProdukController::class, 'edit'])->name('dashboard.produk.edit');
+        Route::get('/create', [ProdukController::class, 'create'])->name('dashboard.produk.create');
+        Route::post('/create', [ProdukController::class, 'store'])->name('dashboard.produk.store');
+    });
+});
+
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
