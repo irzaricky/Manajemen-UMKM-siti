@@ -28,10 +28,12 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
 
     Route::prefix('/dashboard/produk')->group(function () {
         Route::get('/', [ProdukController::class, 'index'])->name('dashboard.produk.index');
-        Route::get('/edit', [ProdukController::class, 'edit'])->name('dashboard.produk.edit');
+        Route::get('/edit/{id}', [ProdukController::class, 'edit'])->name('dashboard.produk.edit');
+        Route::put('/{id}', [ProdukController::class, 'update'])->name('dashboard.produk.update');
         Route::get('/create', [ProdukController::class, 'create'])->name('dashboard.produk.create');
-        Route::post('/create', [ProdukController::class, 'store'])->name('dashboard.produk.store');
+        Route::post('', [ProdukController::class, 'store'])->name('dashboard.produk.store');
     });
+
 });
 
 

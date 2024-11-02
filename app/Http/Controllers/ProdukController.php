@@ -29,7 +29,7 @@ class ProdukController extends Controller
         $request->validate([
             'tipe' => 'required|string',
             'nama' => 'required|string|max:255',
-            'harga' => 'required|numeric|min:0',
+            'harga' => 'required|numeric|min:0|max:100000',
             'stok' => 'required|integer|min:0',
         ]);
 
@@ -42,7 +42,9 @@ class ProdukController extends Controller
     public function edit($id)
     {
         $produk = Produk::findOrFail($id);
-        return view('Produk/edit', compact('produk'));
+        return inertia('Produk/edit', [
+            'produk' => $produk
+        ]);
     }
 
     // Memperbarui data produk
@@ -51,7 +53,7 @@ class ProdukController extends Controller
         $request->validate([
             'tipe' => 'required|string',
             'nama' => 'required|string|max:255',
-            'harga' => 'required|numeric|min:0',
+            'harga' => 'required|numeric|min:0|max:100000',
             'stok' => 'required|integer|min:0',
         ]);
 

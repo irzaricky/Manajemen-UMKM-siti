@@ -78,6 +78,11 @@ const produkList = computed(() => props.produks.data);
                                     >
                                         Stok
                                     </th>
+                                    <th
+                                        class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
+                                    >
+                                        Action
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -99,6 +104,21 @@ const produkList = computed(() => props.produks.data);
                                     </td>
                                     <td class="px-4 py-2 text-sm text-gray-700">
                                         {{ produk.stok }}
+                                    </td>
+                                    <td class="px-4 py-2 text-sm text-white">
+                                        <Button
+                                            @click="
+                                                $inertia.get(
+                                                    route(
+                                                        'dashboard.produk.edit',
+                                                        produk.id
+                                                    )
+                                                )
+                                            "
+                                            class="font-bold py-2 px-4 rounded bg-red-500 hover:bg-red-700"
+                                        >
+                                            Edit
+                                        </Button>
                                     </td>
                                 </tr>
                             </tbody>
