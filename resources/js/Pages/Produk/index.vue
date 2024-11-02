@@ -79,7 +79,7 @@ const produkList = computed(() => props.produks.data);
                                         Stok
                                     </th>
                                     <th
-                                        class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
+                                        class="px-4 py-2 text-center text-sm font-semibold text-gray-600"
                                     >
                                         Action
                                     </th>
@@ -105,7 +105,9 @@ const produkList = computed(() => props.produks.data);
                                     <td class="px-4 py-2 text-sm text-gray-700">
                                         {{ produk.stok }}
                                     </td>
-                                    <td class="px-4 py-2 text-sm text-white">
+                                    <td
+                                        class="py-2 text-sm text-white flex justify-center gap-x-4"
+                                    >
                                         <Button
                                             @click="
                                                 $inertia.get(
@@ -115,9 +117,22 @@ const produkList = computed(() => props.produks.data);
                                                     )
                                                 )
                                             "
-                                            class="font-bold py-2 px-4 rounded bg-red-500 hover:bg-red-700"
+                                            class="font-bold py-2 px-4 rounded bg-slate-500 hover:bg-slate-700"
                                         >
                                             Edit
+                                        </Button>
+                                        <Button
+                                            @click="
+                                                $inertia.get(
+                                                    route(
+                                                        'dashboard.produk.delete',
+                                                        produk.id
+                                                    )
+                                                )
+                                            "
+                                            class="font-bold py-2 px-4 rounded bg-red-500 hover:bg-red-700"
+                                        >
+                                            Hapus
                                         </Button>
                                     </td>
                                 </tr>
