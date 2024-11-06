@@ -13,7 +13,8 @@ class ProdukController extends Controller
     {
         $produks = Produk::paginate(10);
         return inertia('Produk/index', [
-            'produks' => $produks
+            'produks' => $produks,
+            'hero' => 'List Produk',
         ]);
     }
 

@@ -1,12 +1,18 @@
 <script setup>
+import Hero from "@/Components/Hero.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head } from "@inertiajs/vue3";
+
+const props = defineProps({
+  hero: String,
+});
 </script>
 
 <template>
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
+        <Hero :heroTitle="props.hero"/>
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">

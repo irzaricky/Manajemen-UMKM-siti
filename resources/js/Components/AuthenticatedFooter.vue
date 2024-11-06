@@ -32,7 +32,7 @@
                             Opening Hours
                         </div>
                         <div class="text-sm">
-                            Mon - Sat (8.00 AM - 6.00 PM)
+                            Mon - Sat (10.00 AM - 4.00 PM)
                         </div>
                         <div class="text-sm">
                             Sunday (Closed)

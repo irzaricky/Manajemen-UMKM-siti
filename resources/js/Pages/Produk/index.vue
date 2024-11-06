@@ -1,11 +1,13 @@
 <script setup>
+import Hero from "@/Components/Hero.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import { Inertia } from "@inertiajs/inertia";
 import { Head, Link } from "@inertiajs/vue3";
 import { computed } from "vue";
-import { Inertia } from "@inertiajs/inertia";
 
 // Props dari server
 const props = defineProps({
+    hero: String,
     produks: Object, // Objek dari paginasi produk
 });
 
@@ -25,14 +27,12 @@ function deleteProduct(produk) {
     <Head title="Produk" />
 
     <AuthenticatedLayout>
+        <Hero :heroTitle="hero"/>
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <div class="flex justify-between">
-                            <h3 class="text-lg font-semibold mb-4">
-                                List Produk
-                            </h3>
+                        <div class="flex justify-end pb-4">
                             <!-- Navigasi Paginasi -->
                             <nav aria-label="Page navigation">
                                 <ul class="flex space-x-2">
