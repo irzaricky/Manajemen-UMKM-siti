@@ -1,7 +1,8 @@
 <script setup>
-import ApplicationLogo from "@/Components/ApplicationLogo.vue";
+import AuthenticatedFooter from '@/Components/AuthenticatedFooter.vue';
 import Dropdown from "@/Components/Dropdown.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
+import GuestFooter from "@/Components/GuestFooter.vue";
 import NavLink from "@/Components/NavLink.vue";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 import { Link } from "@inertiajs/vue3";
@@ -26,17 +27,16 @@ const navigationLinks = [
 <template>
     <div>
         <div class="min-h-screen bg-gray-100">
-            <nav class="border-b border-gray-100 bg-white">
-                <!-- Primary Navigation Menu -->
+            <nav class="top-0 z-50 border-gray-100 bg-[#101906]">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
+                    <div class="flex h-[80px] justify-between">
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
                                 <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
-                                    />
+                                    <div class="text-2xl font-bold text-white">
+                                        Siti<span class="text-[#648374]">Mart</span>
+                                    </div>
                                 </Link>
                             </div>
 
@@ -207,4 +207,6 @@ const navigationLinks = [
             </main>
         </div>
     </div>
+    <AuthenticatedFooter/>
+    <GuestFooter/>
 </template>
