@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    <footer class="w-full bg-black text-white">
+    <footer class="w-full bg-[#101906] text-white">
         <div class="flex flex-row px-12 py-24 justify-between">
             <div class="flex flex-col w-[45%]">
                 <div class="font-semibold leading-7 text-xl">
