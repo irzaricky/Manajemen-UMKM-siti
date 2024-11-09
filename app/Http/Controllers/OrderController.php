@@ -7,6 +7,7 @@ use App\Models\Transaksi;
 use App\Models\TransaksiDetail;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use DB;
 
 class OrderController extends Controller
 {
@@ -14,11 +15,11 @@ class OrderController extends Controller
     public function index()
     {
         $products = Produk::where('stok', '>', 0)->get();
-        $orderItems = session('order', []);
+        $selectedItems = session('selected_items', []); // Ambil items yang tersimpan
 
         return Inertia::render('Order/index', [
             'products' => $products,
-            'orderItems' => $orderItems
+            'selectedItems' => $selectedItems // Pass ke view
         ]);
     }
 
@@ -74,54 +75,108 @@ class OrderController extends Controller
     // Method untuk memproses order
     public function processOrder(Request $request)
     {
+        $items = $request->items;
 
-        $order = session()->get('order', []);
-
-        if (empty($order)) {
+        if (empty($items)) {
             return back()->with('error', 'Order kosong');
         }
 
-        try {
-            // Begin transaction
-            \DB::beginTransaction();
+        // Validasi stok
+        foreach ($items as $item) {
+            $product = Produk::find($item['id']);
+            if ($product->stok < $item['quantity']) {
+                return back()->with('error', "Stok {$product->nama} tidak mencukupi");
+            }
+        }
 
-            // Create transaction
+        // Simpan items ke session untuk digunakan kembali
+        session()->put('selected_items', $items);
+
+        return Inertia::render('Order/Kasir', [
+            'orderItems' => $items,
+            'total' => collect($items)->sum(function ($item) {
+                return $item['price'] * $item['quantity'];
+            })
+        ]);
+    }
+
+    public function kasir()
+    {
+        $orderItems = session('order', []);
+
+        // Validate session data
+        if (empty($orderItems)) {
+            return redirect()->route('order.index')
+                ->with('error', 'No items in order');
+        }
+
+
+        $total = collect($orderItems)->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
+        });
+
+        return Inertia::render('Order/Kasir', [
+            'orderItems' => $orderItems,
+            'total' => $total
+        ]);
+    }
+
+    public function invoice(Request $request)
+    {
+        // Validate request data
+        if (empty($request->items)) {
+            return redirect()->route('order.index')
+                ->with('error', 'No items to process');
+        }
+
+        try {
+            $transaction = $this->createTransaction($request->items);
+
+            // Load required relations
+            $transaction->load(['transaksiDetail.produk']);
+
+            // Clear session data after successful transaction
+            session()->forget(['order', 'selected_items']);
+
+            return Inertia::render('Order/Invoice', [
+                'transaction' => $transaction
+            ]);
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to process transaction: ' . $e->getMessage());
+        }
+    }
+
+    private function createTransaction($order)
+    {
+        try {
+            DB::beginTransaction();
+
             $transaction = Transaksi::create([
                 'tanggal' => now(),
                 'total_harga' => collect($order)->sum(function ($item) {
                     return $item['price'] * $item['quantity'];
-                }),
+                })
             ]);
 
-            // Create transaction details and update stock
-            foreach ($order as $productId => $item) {
+            foreach ($order as $item) {
                 TransaksiDetail::create([
                     'transaksi_id' => $transaction->id,
-                    'produk_id' => $productId,
+                    'produk_id' => $item['id'],
                     'jumlah' => $item['quantity'],
                     'harga_satuan' => $item['price']
                 ]);
 
-                $product = Produk::findOrFail($productId);
-                if (!$product->kurangiStok($item['quantity'])) {
-                    throw new \Exception("Stok produk {$product->nama} tidak mencukupi");
-                }
+                $product = Produk::find($item['id']);
+                $product->kurangiStok($item['quantity']);
             }
 
-            // Clear order session
-            session()->forget('order');
-
-            // Commit transaction
-            \DB::commit();
-
-            return redirect()->route('order.index')
-                ->with('success', 'Order berhasil diproses');
-
+            DB::commit();
+            return $transaction;
         } catch (\Exception $e) {
-            // Rollback transaction
-            \DB::rollBack();
-
-            return back()->with('error', $e->getMessage());
+            DB::rollBack();
+            throw $e;
         }
     }
 }

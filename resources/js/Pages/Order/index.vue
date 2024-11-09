@@ -1,21 +1,45 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head } from "@inertiajs/vue3";
-import { ref, computed } from "vue";
+import { Head, router } from "@inertiajs/vue3";
+import { ref, computed, onMounted } from "vue";
 
 const props = defineProps({
     products: Array,
+    selectedItems: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 // Convert products array to reactive ref with temporary stock
 const productList = ref(
-    props.products.map((product) => ({
-        ...product,
-        tempStock: product.stok, // Add temporary stock property
-    }))
+    props.products.map((product) => {
+        const selectedItem = props.selectedItems.find(
+            (item) => item.id === product.id
+        );
+        return {
+            ...product,
+            tempStock: selectedItem
+                ? product.stok - selectedItem.quantity
+                : product.stok,
+        };
+    })
 );
 
 const orderItems = ref({});
+
+// Initialize orderItems with selectedItems if any
+onMounted(() => {
+    props.selectedItems.forEach((item) => {
+        orderItems.value[item.id] = {
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            maxStock: item.maxStock,
+        };
+    });
+});
 
 // Computed property untuk total order
 const orderTotal = computed(() => {
@@ -88,6 +112,12 @@ function updateQuantity(productId, newQuantity) {
 
     // Update item quantity
     item.quantity = newQuantity;
+}
+
+function processOrder() {
+    router.post(route("order.process"), {
+        items: Object.values(orderItems.value),
+    });
 }
 </script>
 
@@ -241,6 +271,7 @@ function updateQuantity(productId, newQuantity) {
                                     >
                                 </div>
                                 <button
+                                    @click="processOrder"
                                     class="w-full mt-4 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
                                     :disabled="totalItems === 0"
                                 >
