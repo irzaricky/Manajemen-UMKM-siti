@@ -6,7 +6,7 @@ use Inertia\Inertia;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 
-class ProdukController extends Controller
+class ListProdukController extends Controller
 {
     // Menampilkan daftar produk
     public function index()

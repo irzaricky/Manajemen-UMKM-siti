@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ProdukController;
+use App\Http\Controllers\ListProdukController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -27,12 +28,19 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
     })->name('dashboard');
 
     Route::prefix('/dashboard/produk')->group(function () {
-        Route::get('/', [ProdukController::class, 'index'])->name('dashboard.produk.index');
-        Route::get('/edit/{id}', [ProdukController::class, 'edit'])->name('dashboard.produk.edit');
-        Route::put('/{id}', [ProdukController::class, 'update'])->name('dashboard.produk.update');
-        Route::get('/create', [ProdukController::class, 'create'])->name('dashboard.produk.create');
-        Route::post('/store', [ProdukController::class, 'store'])->name('dashboard.produk.store');
-        Route::delete('/delete/{id}', [ProdukController::class, 'destroy'])->name('dashboard.produk.delete');
+        Route::get('/', [ListProdukController::class, 'index'])->name('dashboard.produk.index');
+        Route::get('/edit/{id}', [ListProdukController::class, 'edit'])->name('dashboard.produk.edit');
+        Route::put('/{id}', [ListProdukController::class, 'update'])->name('dashboard.produk.update');
+        Route::get('/create', [ListProdukController::class, 'create'])->name('dashboard.produk.create');
+        Route::post('/store', [ListProdukController::class, 'store'])->name('dashboard.produk.store');
+        Route::delete('/delete/{id}', [ListProdukController::class, 'destroy'])->name('dashboard.produk.delete');
+    });
+
+    Route::prefix('/dashboard/order')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('order.index');
+        Route::post('/add', [OrderController::class, 'addToOrder'])->name('order.add');
+        Route::post('/remove', [OrderController::class, 'removeFromOrder'])->name('order.remove');
+        Route::post('/process', [OrderController::class, 'processOrder'])->name('order.process');
     });
 
 });

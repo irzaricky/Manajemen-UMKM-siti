@@ -20,6 +20,11 @@ const navigationLinks = [
         href: route("dashboard.produk.index"),
         isActive: route().current("dashboard.produk.index"),
     },
+    {
+        name: "Order Menu",
+        href: route("order.index"),
+        isActive: route().current("order.index"),
+    },
 ];
 </script>
 
