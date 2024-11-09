@@ -74,9 +74,6 @@ class OrderController extends Controller
     // Method untuk memproses order
     public function processOrder(Request $request)
     {
-        $request->validate([
-            'payment_type' => 'required|in:tunai,transfer'
-        ]);
 
         $order = session()->get('order', []);
 
@@ -94,7 +91,6 @@ class OrderController extends Controller
                 'total_harga' => collect($order)->sum(function ($item) {
                     return $item['price'] * $item['quantity'];
                 }),
-                'tipe_pembayaran' => $request->payment_type
             ]);
 
             // Create transaction details and update stock
@@ -127,28 +123,5 @@ class OrderController extends Controller
 
             return back()->with('error', $e->getMessage());
         }
-    }
-
-    // Method untuk mengupdate quantity item dalam order
-    public function updateQuantity(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:produks,id',
-            'quantity' => 'required|integer|min:1'
-        ]);
-
-        $order = session()->get('order', []);
-        $product = Produk::findOrFail($request->product_id);
-
-        if ($product->stok < $request->quantity) {
-            return back()->with('error', 'Stok tidak mencukupi');
-        }
-
-        if (isset($order[$request->product_id])) {
-            $order[$request->product_id]['quantity'] = $request->quantity;
-            session()->put('order', $order);
-        }
-
-        return back()->with('success', 'Quantity berhasil diupdate');
     }
 }
