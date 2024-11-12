@@ -25,6 +25,11 @@ const navigationLinks = [
         href: route("order.index"),
         isActive: route().current("order.index"),
     },
+    {
+        name: "Laporan Penjualan",
+        href: route("laporan.index"),
+        isActive: route().current("laporan.index"),
+    },
 ];
 </script>
 

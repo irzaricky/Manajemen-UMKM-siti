@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ListProdukController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/laporan/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
+
+    Route::prefix('/laporan')->group(function () {
+        Route::get('/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/penjualan/{date}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
+        Route::put('/penjualan/{date}', [LaporanController::class, 'update'])->name('laporan.update');
+        Route::delete('/penjualan/{date}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
+    });
 });
 
 require __DIR__ . '/auth.php';
