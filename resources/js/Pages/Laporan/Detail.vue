@@ -23,10 +23,6 @@ function confirmDeleteTransaction(transactionId) {
         router.delete(route("laporan.transaction.destroy", transactionId));
     }
 }
-
-function editTransaction(transactionId) {
-    router.get(route("laporan.transaction.edit", transactionId));
-}
 </script>
 
 <template>
@@ -60,12 +56,6 @@ function editTransaction(transactionId) {
                                 Transaksi #{{ transactionId }}
                             </h3>
                             <div class="flex gap-2">
-                                <button
-                                    @click="editTransaction(transactionId)"
-                                    class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                                >
-                                    Edit
-                                </button>
                                 <button
                                     @click="
                                         confirmDeleteTransaction(transactionId)
