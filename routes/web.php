@@ -61,8 +61,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('/penjualan/{date}/detail', [LaporanController::class, 'detail'])->name('laporan.detail');
         Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');
-        Route::get('/transaction/{id}/edit', [LaporanController::class, 'editTransaction'])->name('laporan.transaction.edit');
-        Route::put('/transaction/{id}', [LaporanController::class, 'updateTransaction'])->name('laporan.transaction.update');
     });
 });
 
