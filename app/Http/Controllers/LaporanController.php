@@ -102,4 +102,141 @@ class LaporanController extends Controller
         return redirect()->route('laporan.index')
             ->with('message', 'Laporan berhasil dihapus');
     }
+
+    public function detail($date)
+    {
+        $transactions = DB::table('transaksi')
+            ->join('detail_transaksi', 'transaksi.id', '=', 'detail_transaksi.transaksi_id')
+            ->join('produks', 'detail_transaksi.produk_id', '=', 'produks.id')
+            ->select(
+                'transaksi.id',
+                'transaksi.tanggal',
+                'transaksi.total_harga',
+                'detail_transaksi.id as detail_id',
+                'detail_transaksi.jumlah',
+                'detail_transaksi.harga_satuan',
+                'produks.nama as nama_produk'
+            )
+            ->whereDate('transaksi.tanggal', $date)
+            ->get()
+            ->groupBy('id');
+
+        return Inertia::render('Laporan/Detail', [
+            'transactions' => $transactions,
+            'date' => $date
+        ]);
+    }
+
+    public function editTransaction($id)
+    {
+        $transaction = DB::table('transaksi')
+            ->join('detail_transaksi', 'transaksi.id', '=', 'detail_transaksi.transaksi_id')
+            ->join('produks', 'detail_transaksi.produk_id', '=', 'produks.id')
+            ->where('transaksi.id', $id)
+            ->select(
+                'transaksi.id',
+                'transaksi.tanggal',
+                'transaksi.total_harga',
+                'detail_transaksi.id as detail_id',
+                'detail_transaksi.jumlah',
+                'detail_transaksi.harga_satuan',
+                'detail_transaksi.produk_id',
+                'produks.nama as nama_produk'
+            )
+            ->get()
+            ->groupBy('id')
+            ->first();
+
+        if (!$transaction) {
+            return redirect()->route('laporan.index')
+                ->with('error', 'Transaksi tidak ditemukan');
+        }
+
+        return Inertia::render('Laporan/EditTransaction', [
+            'transaction' => $transaction
+        ]);
+    }
+
+    public function updateTransaction(Request $request, $id)
+    {
+        $request->validate([
+            'details' => 'required|array',
+            'details.*.jumlah' => 'required|integer|min:1',
+            'details.*.harga_satuan' => 'required|numeric|min:0'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Update each detail
+            foreach ($request->details as $detail) {
+                DB::table('detail_transaksi')
+                    ->where('id', $detail['detail_id'])
+                    ->update([
+                        'jumlah' => $detail['jumlah'],
+                        'harga_satuan' => $detail['harga_satuan']
+                    ]);
+            }
+
+            // Update total in transaksi
+            $newTotal = collect($request->details)->sum(function ($detail) {
+                return $detail['jumlah'] * $detail['harga_satuan'];
+            });
+
+            DB::table('transaksi')
+                ->where('id', $id)
+                ->update([
+                    'total_harga' => $newTotal,
+                    'updated_at' => now()
+                ]);
+
+            DB::commit();
+
+            return redirect()->route('laporan.detail', [
+                'date' => $request->tanggal
+            ])->with('message', 'Transaksi berhasil diperbarui');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memperbarui transaksi: ' . $e->getMessage());
+        }
+    }
+
+    public function destroyTransaction($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Get transaction date first for redirect
+            $transaction = DB::table('transaksi')
+                ->where('id', $id)
+                ->first();
+
+            if (!$transaction) {
+                return back()->with('error', 'Transaksi tidak ditemukan');
+            }
+
+            $date = date('Y-m-d', strtotime($transaction->tanggal));
+
+            // Delete detail_transaksi first due to foreign key constraint
+            DB::table('detail_transaksi')
+                ->where('transaksi_id', $id)
+                ->delete();
+
+            // Delete the transaction
+            DB::table('transaksi')
+                ->where('id', $id)
+                ->delete();
+
+            DB::commit();
+
+            return redirect()->route('laporan.detail', [
+                'date' => $date
+            ])->with('message', 'Transaksi berhasil dihapus');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
+        }
+    }
 }

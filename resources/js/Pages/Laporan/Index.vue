@@ -20,7 +20,7 @@ const formatDate = (date) => {
 
 function editReport(report) {
     if (report && report.tanggal) {
-        router.get(route("laporan.edit", { id: report.tanggal }));
+        router.get(route("laporan.detail", { date: report.tanggal }));
     } else {
         console.error("Invalid report or missing date:", report);
     }

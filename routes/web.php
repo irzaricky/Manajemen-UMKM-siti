@@ -57,12 +57,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/laporan/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
 
-    Route::prefix('/laporan')->group(function () {
+    Route::prefix('/laporan')->middleware(['auth'])->group(function () {
         Route::get('/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
-        Route::get('/penjualan/{date}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
-        Route::put('/penjualan/{date}', [LaporanController::class, 'update'])->name('laporan.update');
-        Route::delete('/penjualan/{date}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
+        Route::get('/penjualan/{date}/detail', [LaporanController::class, 'detail'])->name('laporan.detail');
+        Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');
+        Route::get('/transaction/{id}/edit', [LaporanController::class, 'editTransaction'])->name('laporan.transaction.edit');
+        Route::put('/transaction/{id}', [LaporanController::class, 'updateTransaction'])->name('laporan.transaction.update');
     });
 });
+
+
 
 require __DIR__ . '/auth.php';
