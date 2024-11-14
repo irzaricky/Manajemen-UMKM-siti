@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ListProdukController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\BahanBakuController;
+use App\Http\Controllers\ResepController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -62,6 +64,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/penjualan/{date}/detail', [LaporanController::class, 'detail'])->name('laporan.detail');
         Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');
     });
+
+    Route::get('/bahan-baku', [BahanBakuController::class, 'index'])->name('bahan-baku.index');
+    Route::get('/resep', [ResepController::class, 'index'])->name('resep.index');
 });
 
 

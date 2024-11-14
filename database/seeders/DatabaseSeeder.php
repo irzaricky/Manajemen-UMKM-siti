@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             ProdukSeeder::class,
             TransaksiSeeder::class,
             DetailTransaksiSeeder::class,
+            BahanBakuSeeder::class,
+            ResepSeeder::class,
         ]);
     }
 }

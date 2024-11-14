@@ -1,21 +1,38 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
-import { computed } from "vue";
+import { Head, Link, router } from "@inertiajs/vue3";
+import { computed, ref, watch } from "vue";
 import { Inertia } from "@inertiajs/inertia";
+import debounce from "lodash/debounce";
 
-// Props dari server
 const props = defineProps({
-    produks: Object, // Objek dari paginasi produk
+    produks: Object,
+    filters: Object,
 });
 
-// Daftar produk dari props paginasi
 const produkList = computed(() => props.produks.data);
+const search = ref(props.filters.search);
 
-// Fungsi untuk menghapus produk dengan konfirmasi
+// Debounced search function
+const performSearch = debounce((value) => {
+    router.get(
+        route("dashboard.produk.index"),
+        { search: value },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        }
+    );
+}, 300);
+
+// Watch for search input changes
+watch(search, (value) => {
+    performSearch(value);
+});
+
 function deleteProduct(produk) {
     if (confirm(`Apakah Anda yakin ingin menghapus produk "${produk.nama}"?`)) {
-        // Memanggil Inertia untuk menghapus produk
         Inertia.delete(route("dashboard.produk.delete", produk.id));
     }
 }
@@ -29,10 +46,19 @@ function deleteProduct(produk) {
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <div class="flex justify-between">
-                            <h3 class="text-lg font-semibold mb-4">
-                                List Produk
-                            </h3>
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold">List Produk</h3>
+
+                            <!-- Search Input -->
+                            <div class="flex items-center">
+                                <input
+                                    v-model="search"
+                                    type="text"
+                                    placeholder="Cari produk..."
+                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+
                             <!-- Navigasi Paginasi -->
                             <nav aria-label="Page navigation">
                                 <ul class="flex space-x-2">

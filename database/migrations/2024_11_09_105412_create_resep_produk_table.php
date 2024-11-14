@@ -12,9 +12,9 @@ return new class extends Migration {
     {
         Schema::create('resep_produk', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produk_id')->constrained('bahan_baku')->onDelete('cascade');
+            $table->foreignId('produk_id')->constrained('produks')->onDelete('cascade');
             $table->foreignId('bahan_baku_id')->constrained('bahan_baku')->onDelete('cascade');
-            $table->integer('jumlah_bahan');
+            $table->float('jumlah_bahan');
             $table->timestamps();
         });
     }

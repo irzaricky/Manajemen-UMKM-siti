@@ -9,11 +9,23 @@ use Illuminate\Http\Request;
 class ListProdukController extends Controller
 {
     // Menampilkan daftar produk
-    public function index()
+    public function index(Request $request)
     {
-        $produks = Produk::paginate(10);
+        $query = Produk::query();
+
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('nama', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('tipe', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
+        $produks = $query->paginate(10)->withQueryString();
+
         return inertia('Produk/index', [
-            'produks' => $produks
+            'produks' => $produks,
+            'filters' => $request->only(['search'])
         ]);
     }
 
@@ -26,16 +38,24 @@ class ListProdukController extends Controller
     // Menyimpan produk baru
     public function store(Request $request)
     {
-        $request->validate([
+        // Validate input
+        $validated = $request->validate([
             'tipe' => 'required|string',
             'nama' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0|max:100000',
             'stok' => 'required|integer|min:0',
         ]);
 
-        Produk::create($request->all());
+        // Create product with only validated fields
+        Produk::create([
+            'tipe' => $validated['tipe'],
+            'nama' => $validated['nama'],
+            'harga' => $validated['harga'],
+            'stok' => $validated['stok']
+        ]);
 
-        return redirect()->route('dashboard.produk.index')->with('success', 'Produk berhasil ditambahkan.');
+        return redirect()->route('dashboard.produk.index')
+            ->with('success', 'Produk berhasil ditambahkan.');
     }
 
     // Menampilkan form untuk mengedit produk
@@ -50,17 +70,25 @@ class ListProdukController extends Controller
     // Memperbarui data produk
     public function update(Request $request, $id)
     {
-        $request->validate([
+        // Validate input
+        $validated = $request->validate([
             'tipe' => 'required|string',
             'nama' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0|max:100000',
             'stok' => 'required|integer|min:0',
         ]);
 
+        // Find product and update with only validated fields
         $produk = Produk::findOrFail($id);
-        $produk->update($request->all());
+        $produk->update([
+            'tipe' => $validated['tipe'],
+            'nama' => $validated['nama'],
+            'harga' => $validated['harga'],
+            'stok' => $validated['stok']
+        ]);
 
-        return redirect()->route('dashboard.produk.index')->with('success', 'Produk berhasil diperbarui.');
+        return redirect()->route('dashboard.produk.index')
+            ->with('success', 'Produk berhasil diperbarui.');
     }
 
     // Menghapus produk

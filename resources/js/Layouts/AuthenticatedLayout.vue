@@ -21,6 +21,16 @@ const navigationLinks = [
         isActive: route().current("dashboard.produk.index"),
     },
     {
+        name: "Bahan Baku",
+        href: route("bahan-baku.index"),
+        isActive: route().current("bahan-baku.index"),
+    },
+    {
+        name: "Resep",
+        href: route("resep.index"),
+        isActive: route().current("resep.index"),
+    },
+    {
         name: "Order Menu",
         href: route("order.index"),
         isActive: route().current("order.index"),
