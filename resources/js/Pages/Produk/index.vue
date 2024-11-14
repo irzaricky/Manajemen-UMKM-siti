@@ -66,6 +66,10 @@ function deleteProduct(produk) {
                                         <Link
                                             :href="props.produks.prev_page_url"
                                             class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+                                            :class="{
+                                                'opacity-50 cursor-not-allowed':
+                                                    !produks.prev_page_url,
+                                            }"
                                         >
                                             Previous
                                         </Link>
@@ -74,6 +78,10 @@ function deleteProduct(produk) {
                                         <Link
                                             :href="props.produks.next_page_url"
                                             class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+                                            :class="{
+                                                'opacity-50 cursor-not-allowed':
+                                                    !produks.next_page_url,
+                                            }"
                                         >
                                             Next
                                         </Link>

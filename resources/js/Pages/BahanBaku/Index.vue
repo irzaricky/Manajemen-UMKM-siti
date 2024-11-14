@@ -39,6 +39,8 @@ watch(search, (value) => {
                             <h3 class="text-lg font-semibold">
                                 List Bahan Baku
                             </h3>
+
+                            <!-- Search Input -->
                             <div class="flex items-center">
                                 <input
                                     v-model="search"
@@ -47,6 +49,36 @@ watch(search, (value) => {
                                     class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
+
+                            <!-- Pagination Navigation -->
+                            <nav aria-label="Page navigation">
+                                <ul class="flex space-x-2">
+                                    <li>
+                                        <Link
+                                            :href="bahanBaku.prev_page_url"
+                                            class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+                                            :class="{
+                                                'opacity-50 cursor-not-allowed':
+                                                    !bahanBaku.prev_page_url,
+                                            }"
+                                        >
+                                            Previous
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            :href="bahanBaku.next_page_url"
+                                            class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+                                            :class="{
+                                                'opacity-50 cursor-not-allowed':
+                                                    !bahanBaku.next_page_url,
+                                            }"
+                                        >
+                                            Next
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
 
                         <table
