@@ -12,14 +12,22 @@ use DB;
 class OrderController extends Controller
 {
     // Method untuk menampilkan halaman order
-    public function index()
+    public function index(Request $request)
     {
-        $products = Produk::where('stok', '>', 0)->get();
-        $selectedItems = session('selected_items', []); // Ambil items yang tersimpan
+        $query = Produk::query()->where('stok', '>', 0);
+
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where('nama', 'LIKE', "%{$searchTerm}%");
+        }
+
+        $products = $query->get();
+        $selectedItems = session('selected_items', []);
 
         return Inertia::render('Order/index', [
             'products' => $products,
-            'selectedItems' => $selectedItems // Pass ke view
+            'selectedItems' => $selectedItems,
+            'filters' => $request->only(['search'])
         ]);
     }
 

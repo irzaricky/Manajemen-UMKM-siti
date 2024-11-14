@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
+import debounce from "lodash/debounce";
 
 const props = defineProps({
     products: Array,
@@ -9,9 +10,13 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    filters: Object,
 });
 
-// Convert products array to reactive ref with temporary stock
+// Inisialisasi nilai pencarian dari filters
+const search = ref(props.filters.search || "");
+
+// Konversi array produk menjadi reactive ref dengan stok sementara
 const productList = ref(
     props.products.map((product) => {
         const selectedItem = props.selectedItems.find(
@@ -26,9 +31,41 @@ const productList = ref(
     })
 );
 
+// Fungsi pencarian dengan debounce untuk pembaruan langsung
+const performSearch = debounce((value) => {
+    router.get(
+        route("order.index"),
+        { search: value },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onSuccess: () => {
+                // Perbarui productList ketika pencarian berhasil
+                productList.value = props.products.map((product) => {
+                    const selectedItem = props.selectedItems.find(
+                        (item) => item.id === product.id
+                    );
+                    return {
+                        ...product,
+                        tempStock: selectedItem
+                            ? product.stok - selectedItem.quantity
+                            : product.stok,
+                    };
+                });
+            },
+        }
+    );
+}, 300);
+
+// Pantau perubahan pencarian dengan efek langsung
+watch(search, (value) => {
+    performSearch(value);
+});
+
 const orderItems = ref({});
 
-// Initialize orderItems with selectedItems if any
+// Inisialisasi orderItems dengan selectedItems jika ada
 onMounted(() => {
     props.selectedItems.forEach((item) => {
         orderItems.value[item.id] = {
@@ -41,23 +78,23 @@ onMounted(() => {
     });
 });
 
-// Computed property untuk total order
+// Properti computed untuk total pesanan
 const orderTotal = computed(() => {
     return Object.values(orderItems.value).reduce((total, item) => {
         return total + item.price * item.quantity;
     }, 0);
 });
 
-// Add this computed property for total items
+// Properti computed untuk total item
 const totalItems = computed(() => {
     return Object.values(orderItems.value).reduce((total, item) => {
         return total + item.quantity;
     }, 0);
 });
 
-// Method untuk menambah item ke order
+// Fungsi untuk menambah item ke pesanan
 function addToOrder(product) {
-    // Check if adding one more would exceed stock
+    // Periksa apakah penambahan satu item akan melebihi stok
     const currentQuantity = orderItems.value[product.id]?.quantity || 0;
     const productInList = productList.value.find((p) => p.id === product.id);
 
@@ -78,39 +115,39 @@ function addToOrder(product) {
         orderItems.value[product.id].quantity++;
     }
 
-    // Decrease temporary stock
+    // Kurangi stok sementara
     productInList.tempStock--;
 }
 
-// Method untuk menghapus item dari order
+// Fungsi untuk menghapus item dari pesanan
 function removeFromOrder(productId) {
     const item = orderItems.value[productId];
     const productInList = productList.value.find((p) => p.id === productId);
 
-    // Restore temporary stock
+    // Kembalikan stok sementara
     productInList.tempStock += item.quantity;
 
     delete orderItems.value[productId];
 }
 
-// Method untuk update quantity
+// Fungsi untuk memperbarui kuantitas
 function updateQuantity(productId, newQuantity) {
     const item = orderItems.value[productId];
     const productInList = productList.value.find((p) => p.id === productId);
 
-    // Calculate the difference
+    // Hitung selisih
     const difference = newQuantity - item.quantity;
 
-    // Check if new quantity is valid
+    // Periksa apakah kuantitas baru valid
     if (productInList.tempStock - difference < 0) {
         alert("Stok tidak mencukupi!");
         return;
     }
 
-    // Update temporary stock
+    // Perbarui stok sementara
     productInList.tempStock -= difference;
 
-    // Update item quantity
+    // Perbarui kuantitas item
     item.quantity = newQuantity;
 }
 
@@ -131,7 +168,19 @@ function processOrder() {
                     <div
                         class="w-2/3 bg-white overflow-hidden shadow-sm sm:rounded-lg p-6"
                     >
-                        <h2 class="text-xl font-bold mb-4">Menu</h2>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold">Menu</h2>
+                            <!-- Search Input -->
+                            <div class="flex items-center">
+                                <input
+                                    v-model="search"
+                                    type="text"
+                                    placeholder="Cari menu..."
+                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-4">
                             <div
                                 v-for="product in productList"
