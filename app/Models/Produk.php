@@ -4,11 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Produk extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $table = 'produks'; // Changed to match migration table name
 
@@ -19,7 +18,8 @@ class Produk extends Model
         'stok',
         'minimum_stok',
         'harga_modal',
-        'keterangan'
+        'keterangan',
+        'gambar'
     ];
 
     protected $casts = [
@@ -56,17 +56,6 @@ class Produk extends Model
         return $this->hasMany(PenggunaanBahanBaku::class);
     }
 
-    // Method untuk cek stok minimum
-    public function isStokMinimum(): bool
-    {
-        return $this->stok <= $this->minimum_stok;
-    }
-
-    // Method untuk menghitung keuntungan per produk
-    public function getKeuntunganAttribute(): float
-    {
-        return $this->harga - $this->harga_modal;
-    }
 
     // Method untuk mengurangi stok
     public function kurangiStok(int $jumlah): bool
@@ -76,32 +65,6 @@ class Produk extends Model
             return $this->save();
         }
         return false;
-    }
-
-    // Method untuk menambah stok
-    public function tambahStok(int $jumlah): bool
-    {
-        $this->stok += $jumlah;
-        return $this->save();
-    }
-
-    // Method untuk mengupdate harga modal
-    public function updateHargaModal(float $hargaBaru): bool
-    {
-        $this->harga_modal = $hargaBaru;
-        return $this->save();
-    }
-
-    // Scope untuk produk dengan stok dibawah minimum
-    public function scopeStokMinimum($query)
-    {
-        return $query->whereRaw('stok <= minimum_stok');
-    }
-
-    // Scope untuk mencari produk berdasarkan tipe
-    public function scopeTipe($query, string $tipe)
-    {
-        return $query->where('tipe', $tipe);
     }
 }
 

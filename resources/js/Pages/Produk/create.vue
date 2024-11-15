@@ -8,11 +8,19 @@ const form = useForm({
     tipe: "",
     harga: "",
     stok: "",
+    gambar: null,
 });
 
 // Fungsi untuk submit form
 function submit() {
-    form.post(route("dashboard.produk.store"));
+    form.post(route("dashboard.produk.store"), {
+        preserveScroll: true,
+        onSuccess: () => form.reset(),
+    });
+}
+
+function handleFileChange(e) {
+    form.gambar = e.target.files[0];
 }
 </script>
 
@@ -29,7 +37,10 @@ function submit() {
                         </h3>
 
                         <!-- Form Input Produk -->
-                        <form @submit.prevent="submit">
+                        <form
+                            @submit.prevent="submit"
+                            enctype="multipart/form-data"
+                        >
                             <div class="mb-4">
                                 <label
                                     class="block text-sm font-medium text-gray-700"
@@ -102,6 +113,20 @@ function submit() {
                                 >
                                     {{ form.errors.stok }}
                                 </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                >
+                                    Gambar Produk
+                                </label>
+                                <input
+                                    type="file"
+                                    @input="handleFileChange"
+                                    accept="image/*"
+                                    class="mt-1 block w-full"
+                                />
                             </div>
 
                             <div class="flex justify-end">

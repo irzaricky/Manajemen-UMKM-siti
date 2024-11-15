@@ -25,14 +25,6 @@ function editReport(report) {
         console.error("Invalid report or missing date:", report);
     }
 }
-
-function confirmDelete(report) {
-    if (report && report.id) {
-        if (confirm("Apakah Anda yakin ingin menghapus laporan ini?")) {
-            router.delete(route("laporan.destroy", { id: report.id }));
-        }
-    }
-}
 </script>
 
 <template>
@@ -117,12 +109,6 @@ function confirmDelete(report) {
                                             class="text-indigo-600 hover:text-indigo-900 mr-3"
                                         >
                                             Edit
-                                        </button>
-                                        <button
-                                            @click="confirmDelete(report)"
-                                            class="text-red-600 hover:text-red-900"
-                                        >
-                                            Hapus
                                         </button>
                                     </td>
                                 </tr>

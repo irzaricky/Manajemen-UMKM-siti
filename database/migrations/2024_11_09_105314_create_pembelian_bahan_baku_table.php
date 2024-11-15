@@ -19,7 +19,6 @@ return new class extends Migration {
             $table->decimal('total_harga', 15, 2);
             $table->date('tanggal_pembelian');
             $table->timestamps();
-            $table->softDeletes();
             $table->text('keterangan')->nullable();
             $table->index('tanggal_pembelian');
             $table->index('nomor_invoice');

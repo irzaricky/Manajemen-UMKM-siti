@@ -104,6 +104,11 @@ function deleteProduct(produk) {
                                     <th
                                         class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
                                     >
+                                        Gambar
+                                    </th>
+                                    <th
+                                        class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
+                                    >
                                         Nama
                                     </th>
                                     <th
@@ -135,6 +140,27 @@ function deleteProduct(produk) {
                                 >
                                     <td class="px-4 py-2 text-sm text-gray-700">
                                         {{ produk.id }}
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <div
+                                            class="h-16 w-16 overflow-hidden rounded-lg"
+                                        >
+                                            <img
+                                                v-if="produk.gambar"
+                                                :src="`/storage/${produk.gambar}`"
+                                                :alt="produk.nama"
+                                                class="h-full w-full object-cover"
+                                            />
+                                            <div
+                                                v-else
+                                                class="flex h-full w-full items-center justify-center bg-gray-100"
+                                            >
+                                                <span
+                                                    class="text-xs text-gray-400"
+                                                    >No Image</span
+                                                >
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-2 text-sm text-gray-700">
                                         {{ produk.nama }}

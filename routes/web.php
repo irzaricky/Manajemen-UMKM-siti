@@ -33,7 +33,7 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
     Route::prefix('/dashboard/produk')->group(function () {
         Route::get('/', [ListProdukController::class, 'index'])->name('dashboard.produk.index');
         Route::get('/edit/{id}', [ListProdukController::class, 'edit'])->name('dashboard.produk.edit');
-        Route::put('/{id}', [ListProdukController::class, 'update'])->name('dashboard.produk.update');
+        Route::post('/{id}', [ListProdukController::class, 'update'])->name('dashboard.produk.update');
         Route::get('/create', [ListProdukController::class, 'create'])->name('dashboard.produk.create');
         Route::post('/store', [ListProdukController::class, 'store'])->name('dashboard.produk.store');
         Route::delete('/delete/{id}', [ListProdukController::class, 'destroy'])->name('dashboard.produk.delete');
@@ -57,12 +57,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/laporan/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
 
     Route::prefix('/laporan')->middleware(['auth'])->group(function () {
         Route::get('/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('/penjualan/{date}/detail', [LaporanController::class, 'detail'])->name('laporan.detail');
-        Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');
+        Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');  
     });
 
     Route::get('/bahan-baku', [BahanBakuController::class, 'index'])->name('bahan-baku.index');

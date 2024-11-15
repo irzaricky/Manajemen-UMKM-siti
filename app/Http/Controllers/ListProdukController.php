@@ -5,9 +5,17 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Produk;
 use Illuminate\Http\Request;
+use App\Http\Controllers\FileUploadController;
 
 class ListProdukController extends Controller
 {
+    protected $fileUploadService;
+
+    public function __construct(FileUploadController $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+    }
+
     // Menampilkan daftar produk
     public function index(Request $request)
     {
@@ -44,15 +52,18 @@ class ListProdukController extends Controller
             'nama' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0|max:100000',
             'stok' => 'required|integer|min:0',
+            'gambar' => 'nullable|image|max:2048'
         ]);
 
+        if ($request->hasFile('gambar')) {
+            $validated['gambar'] = $this->fileUploadService->uploadFile(
+                $request->file('gambar'),
+                'produk'
+            );
+        }
+
         // Create product with only validated fields
-        Produk::create([
-            'tipe' => $validated['tipe'],
-            'nama' => $validated['nama'],
-            'harga' => $validated['harga'],
-            'stok' => $validated['stok']
-        ]);
+        Produk::create($validated);
 
         return redirect()->route('dashboard.produk.index')
             ->with('success', 'Produk berhasil ditambahkan.');
@@ -70,22 +81,27 @@ class ListProdukController extends Controller
     // Memperbarui data produk
     public function update(Request $request, $id)
     {
+        // Find product and update with only validated fields
+        $produk = Produk::findOrFail($id);
+
         // Validate input
         $validated = $request->validate([
             'tipe' => 'required|string',
             'nama' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0|max:100000',
             'stok' => 'required|integer|min:0',
+            'gambar' => 'nullable|image|max:2048'
         ]);
 
-        // Find product and update with only validated fields
-        $produk = Produk::findOrFail($id);
-        $produk->update([
-            'tipe' => $validated['tipe'],
-            'nama' => $validated['nama'],
-            'harga' => $validated['harga'],
-            'stok' => $validated['stok']
-        ]);
+        if ($request->hasFile('gambar')) {
+            $this->fileUploadService->deleteFile($produk->gambar);
+            $validated['gambar'] = $this->fileUploadService->uploadFile(
+                $request->file('gambar'),
+                'produk'
+            );
+        }
+
+        $produk->update($validated);
 
         return redirect()->route('dashboard.produk.index')
             ->with('success', 'Produk berhasil diperbarui.');

@@ -17,10 +17,9 @@ return new class extends Migration {
             $table->integer('stok');
             $table->string('satuan');
             $table->decimal('harga_per_unit', 10, 2);
-            $table->integer('minimum_stok')->default(0);  // Added for stock warnings
-            $table->text('keterangan')->nullable();       // Added for notes
+            $table->integer('minimum_stok')->default(0);
+            $table->text('keterangan')->nullable();
             $table->timestamps();
-            $table->softDeletes();                        // Added for soft deletes
         });
     }
 
