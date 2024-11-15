@@ -3,6 +3,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import { computed, ref, watch } from "vue";
 import debounce from "lodash/debounce";
+import Modal from "@/Components/Modal.vue";
 
 const props = defineProps({
     bahanBaku: Object,
@@ -26,6 +27,27 @@ const performSearch = debounce((value) => {
 watch(search, (value) => {
     performSearch(value);
 });
+
+const showDeleteModal = ref(false);
+const bahanToDelete = ref(null);
+
+const confirmDelete = (bahan) => {
+    bahanToDelete.value = bahan;
+    showDeleteModal.value = true;
+};
+
+const closeModal = () => {
+    showDeleteModal.value = false;
+    bahanToDelete.value = null;
+};
+
+const deleteBahanBaku = () => {
+    router.delete(route("bahan-baku.destroy", bahanToDelete.value.id), {
+        onSuccess: () => {
+            closeModal();
+        },
+    });
+};
 </script>
 
 <template>
@@ -111,6 +133,11 @@ watch(search, (value) => {
                                     >
                                         Minimum Stok
                                     </th>
+                                    <th
+                                        class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
+                                    >
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -141,6 +168,25 @@ watch(search, (value) => {
                                     <td class="px-4 py-2">
                                         {{ bahan.minimum_stok }}
                                     </td>
+                                    <td class="px-4 py-2 space-x-2">
+                                        <Link
+                                            :href="
+                                                route(
+                                                    'bahan-baku.edit',
+                                                    bahan.id
+                                                )
+                                            "
+                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                                        >
+                                            Edit
+                                        </Link>
+                                        <button
+                                            @click="confirmDelete(bahan)"
+                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                                        >
+                                            Hapus
+                                        </button>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -148,5 +194,28 @@ watch(search, (value) => {
                 </div>
             </div>
         </div>
+        <!-- Delete Confirmation Modal -->
+        <Modal :show="showDeleteModal" @close="closeModal">
+            <div class="p-6">
+                <h2 class="text-lg font-medium">Konfirmasi Hapus</h2>
+                <p class="mt-2">
+                    Apakah Anda yakin ingin menghapus bahan baku ini?
+                </p>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button
+                        class="px-4 py-2 bg-gray-300 rounded-md"
+                        @click="closeModal"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        class="px-4 py-2 bg-red-600 text-white rounded-md"
+                        @click="deleteBahanBaku"
+                    >
+                        Hapus
+                    </button>
+                </div>
+            </div>
+        </Modal>
     </AuthenticatedLayout>
 </template>

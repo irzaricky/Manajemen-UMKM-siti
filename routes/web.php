@@ -61,10 +61,21 @@ Route::middleware('auth')->group(function () {
     Route::prefix('/laporan')->middleware(['auth'])->group(function () {
         Route::get('/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('/penjualan/{date}/detail', [LaporanController::class, 'detail'])->name('laporan.detail');
-        Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');  
+        Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');
     });
 
-    Route::get('/bahan-baku', [BahanBakuController::class, 'index'])->name('bahan-baku.index');
+
+
+    Route::prefix('/bahan-baku')->middleware(['auth'])->group(function () {
+        Route::get('/', [BahanBakuController::class, 'index'])->name('bahan-baku.index');
+        Route::get('/create', [BahanBakuController::class, 'create'])->name('bahan-baku.create');
+        Route::post('/', [BahanBakuController::class, 'store'])->name('bahan-baku.store');
+        Route::get('/{id}/edit', [BahanBakuController::class, 'edit'])->name('bahan-baku.edit');
+        Route::post('/{id}', [BahanBakuController::class, 'update'])->name('bahan-baku.update');
+        Route::delete('/{id}', [BahanBakuController::class, 'destroy'])->name('bahan-baku.destroy');
+    });
+
+
     Route::get('/resep', [ResepController::class, 'index'])->name('resep.index');
 });
 
