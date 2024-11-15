@@ -18,6 +18,15 @@ class ProdukController extends Controller
         ]);
     }
 
+    public function dashboard()
+    {
+        $produks = Produk::paginate(perPage: 10);
+        return inertia('Dashboard', [
+            'produks' => $produks,
+            'hero' => 'Dashboard'
+        ]);
+    }
+
     // Menampilkan form untuk menambah produk baru
     public function create()
     {

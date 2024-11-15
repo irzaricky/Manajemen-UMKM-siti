@@ -22,9 +22,7 @@ Route::get('/', function () {
 
 
 Route::group(['middleware' => 'auth', 'verified'], function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard',['hero' => 'Dashboard']);
-    })->name('dashboard');
+    Route::get('/dashboard', [ProdukController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('/dashboard/produk')->group(function () {
         Route::get('/', [ProdukController::class, 'index'])->name('dashboard.produk.index');
