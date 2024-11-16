@@ -26,11 +26,6 @@ class BahanBaku extends Model
         'minimum_stok' => 'integer'
     ];
 
-    // Relasi ke Resep
-    public function resepProduk()
-    {
-        return $this->hasMany(ResepProduk::class);
-    }
 
     // Relasi ke Produk melalui Resep
     public function produk()

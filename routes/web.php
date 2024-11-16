@@ -5,7 +5,7 @@ use App\Http\Controllers\ListProdukController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BahanBakuController;
-use App\Http\Controllers\ResepController;
+use App\Http\Controllers\LaporanKeuntunganController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -52,6 +52,9 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
         Route::get('/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('/penjualan/{date}/detail', [LaporanController::class, 'detail'])->name('laporan.detail');
         Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');
+
+        Route::get('/keuntungan', [LaporanKeuntunganController::class, 'index'])
+            ->name('laporan.keuntungan.index');
     });
 
     Route::prefix('/bahan-baku')->middleware(['auth'])->group(function () {
@@ -65,14 +68,6 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
         Route::get('/bahan-baku/{id}/beli', [BahanBakuController::class, 'showBeli'])->name('bahan-baku.showBeli');
     });
 
-    Route::prefix('/resep')->middleware(['auth'])->group(function () {
-        Route::get('/', [ResepController::class, 'index'])->name('resep.index');
-        Route::get('/create', [ResepController::class, 'create'])->name('resep.create');
-        Route::post('/', [ResepController::class, 'store'])->name('resep.store');
-        Route::get('/{id}/edit', [ResepController::class, 'edit'])->name('resep.edit');
-        Route::put('/{id}', [ResepController::class, 'update'])->name('resep.update');
-        Route::delete('/{id}', [ResepController::class, 'destroy'])->name('resep.destroy');
-    });
 });
 
 

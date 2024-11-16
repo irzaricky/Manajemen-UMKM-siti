@@ -15,15 +15,14 @@ class Produk extends Model
         'tipe',
         'nama',
         'harga',
-        'stok',
         'harga_modal',
+        'stok',
         'keterangan',
         'gambar'
     ];
 
     protected $casts = [
         'harga' => 'decimal:2',
-        'harga_modal' => 'decimal:2',
         'stok' => 'integer',
         'minimum_stok' => 'integer',
         'deleted_at' => 'datetime'
@@ -33,20 +32,6 @@ class Produk extends Model
     public function transaksiDetail()
     {
         return $this->hasMany(TransaksiDetail::class);
-    }
-
-    // Relasi ke Resep
-    public function resepProduk()
-    {
-        return $this->hasMany(ResepProduk::class);
-    }
-
-    // Relasi ke Bahan Baku melalui Resep
-    public function bahanBaku()
-    {
-        return $this->belongsToMany(BahanBaku::class, 'resep_produk')
-            ->withPivot('jumlah_bahan')
-            ->withTimestamps();
     }
 
     // Relasi ke PenggunaanBahanBaku
@@ -64,6 +49,11 @@ class Produk extends Model
             return $this->save();
         }
         return false;
+    }
+
+    public function hitungKeuntungan()
+    {
+        return $this->harga - $this->harga_modal;
     }
 }
 

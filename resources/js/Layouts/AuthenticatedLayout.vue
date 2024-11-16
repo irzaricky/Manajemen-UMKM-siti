@@ -26,11 +26,6 @@ const navigationLinks = [
         isActive: route().current("bahan-baku.index"),
     },
     {
-        name: "Resep",
-        href: route("resep.index"),
-        isActive: route().current("resep.index"),
-    },
-    {
         name: "Order Menu",
         href: route("order.index"),
         isActive: route().current("order.index"),
@@ -39,6 +34,11 @@ const navigationLinks = [
         name: "Laporan Penjualan",
         href: route("laporan.index"),
         isActive: route().current("laporan.index"),
+    },
+    {
+        name: "Laporan keuntungan",
+        href: route("laporan.keuntungan.index"),
+        isActive: route().current("laporan.keuntungan.index"),
     },
 ];
 </script>
