@@ -190,10 +190,17 @@ const deleteBahanBaku = () => {
                                 </tr>
                             </tbody>
                         </table>
+                        <button
+                            class="float-right my-8 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                            @click="$inertia.get(route('bahan-baku.create'))"
+                        >
+                            Tambah Produk
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
+
         <!-- Delete Confirmation Modal -->
         <Modal :show="showDeleteModal" @close="closeModal">
             <div class="p-6">

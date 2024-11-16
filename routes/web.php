@@ -48,23 +48,11 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
         Route::post('/process', [OrderController::class, 'processOrder'])->name('order.process');
     });
 
-});
-
-
-
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     Route::prefix('/laporan')->middleware(['auth'])->group(function () {
         Route::get('/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('/penjualan/{date}/detail', [LaporanController::class, 'detail'])->name('laporan.detail');
         Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');
     });
-
-
 
     Route::prefix('/bahan-baku')->middleware(['auth'])->group(function () {
         Route::get('/', [BahanBakuController::class, 'index'])->name('bahan-baku.index');
@@ -75,8 +63,23 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [BahanBakuController::class, 'destroy'])->name('bahan-baku.destroy');
     });
 
+    Route::prefix('/resep')->middleware(['auth'])->group(function () {
+        Route::get('/', [ResepController::class, 'index'])->name('resep.index');
+        Route::get('/create', [ResepController::class, 'create'])->name('resep.create');
+        Route::post('/', [ResepController::class, 'store'])->name('resep.store');
+        Route::get('/{id}/edit', [ResepController::class, 'edit'])->name('resep.edit');
+        Route::put('/{id}', [ResepController::class, 'update'])->name('resep.update');
+        Route::delete('/{id}', [ResepController::class, 'destroy'])->name('resep.destroy');
+    });
+});
 
-    Route::get('/resep', [ResepController::class, 'index'])->name('resep.index');
+
+
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 
