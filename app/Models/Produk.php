@@ -16,7 +16,6 @@ class Produk extends Model
         'nama',
         'harga',
         'stok',
-        'minimum_stok',
         'harga_modal',
         'keterangan',
         'gambar'

@@ -16,7 +16,6 @@ return new class extends Migration {
             $table->string('nama');
             $table->integer('stok');
             $table->string('satuan');
-            $table->decimal('harga_per_unit', 10, 2);
             $table->integer('minimum_stok')->default(0);
             $table->text('keterangan')->nullable();
             $table->timestamps();

@@ -16,14 +16,12 @@ class BahanBaku extends Model
         'nama',
         'stok',
         'satuan',
-        'harga_per_unit',
         'minimum_stok',
         'keterangan',
         'gambar'
     ];
 
     protected $casts = [
-        'harga_per_unit' => 'decimal:2',
         'stok' => 'integer',
         'minimum_stok' => 'integer'
     ];

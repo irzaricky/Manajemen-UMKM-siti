@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, router } from "@inertiajs/vue3";
-import { computed, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import debounce from "lodash/debounce";
 import Modal from "@/Components/Modal.vue";
 
@@ -11,25 +11,25 @@ const props = defineProps({
 });
 
 const search = ref(props.filters.search);
-
-const performSearch = debounce((value) => {
-    router.get(
-        route("bahan-baku.index"),
-        { search: value },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        }
-    );
-}, 300);
-
-watch(search, (value) => {
-    performSearch(value);
-});
-
 const showDeleteModal = ref(false);
 const bahanToDelete = ref(null);
+// State untuk menyimpan ID bahan baku yang dipilih
+const selectedBahanId = ref(null);
+
+watch(
+    search,
+    debounce((value) => {
+        router.get(
+            route("bahan-baku.index"),
+            { search: value },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            }
+        );
+    }, 300)
+);
 
 const confirmDelete = (bahan) => {
     bahanToDelete.value = bahan;
@@ -48,6 +48,11 @@ const deleteBahanBaku = () => {
         },
     });
 };
+
+// Fungsi untuk mengupdate bahan baku yang dipilih
+function selectBahan(bahanId) {
+    selectedBahanId.value = bahanId;
+}
 </script>
 
 <template>
@@ -106,8 +111,13 @@ const deleteBahanBaku = () => {
                         <table
                             class="min-w-full divide-y divide-gray-200 border"
                         >
-                            <thead class="bg-gray-50">
+                            <thead>
                                 <tr>
+                                    <th
+                                        class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
+                                    >
+                                        Pilih
+                                    </th>
                                     <th
                                         class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
                                     >
@@ -126,11 +136,6 @@ const deleteBahanBaku = () => {
                                     <th
                                         class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
                                     >
-                                        Harga Per Unit
-                                    </th>
-                                    <th
-                                        class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
-                                    >
                                         Minimum Stok
                                     </th>
                                     <th
@@ -145,6 +150,15 @@ const deleteBahanBaku = () => {
                                     v-for="bahan in bahanBaku.data"
                                     :key="bahan.id"
                                 >
+                                    <td class="px-4 py-2">
+                                        <input
+                                            type="radio"
+                                            name="bahanBaku"
+                                            :value="bahan.id"
+                                            v-model="selectedBahanId"
+                                            class="form-radio h-4 w-4 text-green-600"
+                                        />
+                                    </td>
                                     <td class="px-4 py-2">{{ bahan.nama }}</td>
                                     <td
                                         class="px-4 py-2"
@@ -158,12 +172,6 @@ const deleteBahanBaku = () => {
                                     </td>
                                     <td class="px-4 py-2">
                                         {{ bahan.satuan }}
-                                    </td>
-                                    <td class="px-4 py-2">
-                                        Rp
-                                        {{
-                                            bahan.harga_per_unit.toLocaleString()
-                                        }}
                                     </td>
                                     <td class="px-4 py-2">
                                         {{ bahan.minimum_stok }}
@@ -191,10 +199,18 @@ const deleteBahanBaku = () => {
                             </tbody>
                         </table>
                         <button
-                            class="float-right my-8 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                            @click="$inertia.get(route('bahan-baku.create'))"
+                            class="float-right my-8 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            @click="
+                                $inertia.get(
+                                    route(
+                                        'bahan-baku.showBeli',
+                                        selectedBahanId
+                                    )
+                                )
+                            "
+                            :disabled="!selectedBahanId"
                         >
-                            Tambah Produk
+                            Beli Bahan Baku
                         </button>
                     </div>
                 </div>

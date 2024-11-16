@@ -6,9 +6,8 @@ const form = useForm({
     nama: "",
     stok: "",
     satuan: "",
-    harga_per_unit: "",
     minimum_stok: "",
-    keterangan: "",
+    keterangan: ""
 });
 
 function submit() {

@@ -61,6 +61,8 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
         Route::get('/{id}/edit', [BahanBakuController::class, 'edit'])->name('bahan-baku.edit');
         Route::post('/{id}', [BahanBakuController::class, 'update'])->name('bahan-baku.update');
         Route::delete('/{id}', [BahanBakuController::class, 'destroy'])->name('bahan-baku.destroy');
+        Route::post('/bahan-baku/beli', [BahanBakuController::class, 'storePembelian'])->name('bahan-baku.storePembelian');
+        Route::get('/bahan-baku/{id}/beli', [BahanBakuController::class, 'showBeli'])->name('bahan-baku.showBeli');
     });
 
     Route::prefix('/resep')->middleware(['auth'])->group(function () {

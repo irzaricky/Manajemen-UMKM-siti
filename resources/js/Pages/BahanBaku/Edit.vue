@@ -11,7 +11,6 @@ const form = useForm({
     nama: props.bahanBaku.nama,
     stok: props.bahanBaku.stok,
     satuan: props.bahanBaku.satuan,
-    harga_per_unit: props.bahanBaku.harga_per_unit,
     minimum_stok: props.bahanBaku.minimum_stok,
     keterangan: props.bahanBaku.keterangan,
 });
@@ -88,25 +87,6 @@ function submit() {
                                     class="text-red-600 text-sm mt-1"
                                 >
                                     {{ form.errors.satuan }}
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Harga Per Unit</label
-                                >
-                                <input
-                                    v-model="form.harga_per_unit"
-                                    type="number"
-                                    min="0"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                                <div
-                                    v-if="form.errors.harga_per_unit"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.harga_per_unit }}
                                 </div>
                             </div>
 
