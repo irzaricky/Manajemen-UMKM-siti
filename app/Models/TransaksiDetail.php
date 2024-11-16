@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class DetailTransaksi extends Model
+class TransaksiDetail extends Model
 {
     use HasFactory;
 
-    protected $table = 'transaksi_detail';
+    protected $table = 'detail_transaksi';
     protected $fillable = ['transaksi_id', 'produk_id', 'jumlah', 'harga_satuan'];
 
     // Relasi ke Transaksi
