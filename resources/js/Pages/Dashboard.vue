@@ -110,7 +110,7 @@ function removeFromCart(id) {
                                             :disabled="produk.stok === 0 || quantities[produk.id] >= produk.stok"
                                             :class="{
                                                 'bg-gray-400 cursor-not-allowed': produk.stok === 0 || quantities[produk.id] >= produk.stok,
-                                                'bg-green-500 hover:bg-green-700': produk.stok > 0 && quantities[produk.id] < produk.stok
+                                                'bg-[#648374] hover:bg-[#355425]': produk.stok > 0 && quantities[produk.id] < produk.stok
                                             }" class="text-white font-bold py-2 px-3 rounded">
                                             +
                                         </button>
