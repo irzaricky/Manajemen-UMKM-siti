@@ -76,10 +76,21 @@ function removeFromCart(id) {
 
     saveQuantities();
 }
+
+// Fungsi untuk menghapus cart dan quantities dari localStorage
+function clearCart() {
+    localStorage.removeItem("cart"); // Hapus cart dari localStorage
+    localStorage.removeItem("quantities"); // Hapus quantities dari localStorage
+    cart.length = 0; // Reset cart array
+    // Reset quantities untuk semua produk dalam produkList
+    produkList.value.forEach(produk => {
+        quantities[produk.id] = 0; // Set default ke 0 jika belum ada
+    });
+    saveQuantities(); // Simpan kembali ke localStorage
+}
 </script>
 
 <template>
-
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
@@ -134,8 +145,7 @@ function removeFromCart(id) {
                                 </ul>
                             </nav>
                         </div>
-                        <div
-                            class="shrink-0 md:rotate-0 border border-solid opacity-40 bg-zinc-500 border-zinc-500 mx-5 hidden md:block">
+                        <div class="shrink-0 md:rotate-0 border border-solid opacity-40 bg-zinc-500 border-zinc-500 mx-5 hidden md:block">
                         </div>
                         <div class="flex flex-col w-[45%]">
                             <h1 class="font-bold text-3xl text-center justify-center">
@@ -171,7 +181,7 @@ function removeFromCart(id) {
                                         }}</p>
                                     </div>
                                     <div class="mt-4 flex items-center justify-center">
-                                        <PrimaryButton v-if="cart.length > 0">
+                                        <PrimaryButton v-if="cart.length > 0" @click="clearCart">
                                             Proceed to Checkout
                                         </PrimaryButton>
                                     </div>
