@@ -4,39 +4,26 @@ import { Head, Link, useForm } from "@inertiajs/vue3";
 import { ref } from "vue";
 
 const props = defineProps({
-    produk: Object,
+    bahanBaku: Object,
 });
 
-// Tambahkan ref untuk preview gambar
-const imagePreview = ref(props.produk.gambar ? `/storage/${props.produk.gambar}` : null);
-
 const form = useForm({
-    nama: props.produk.nama,
-    tipe: props.produk.tipe,
-    harga: props.produk.harga,
-    stok: props.produk.stok,
-    gambar: props.produk.gambar,
+    nama: props.bahanBaku.nama,
+    stok: props.bahanBaku.stok,
+    satuan: props.bahanBaku.satuan,
+    minimum_stok: props.bahanBaku.minimum_stok,
+    keterangan: props.bahanBaku.keterangan,
 });
 
 function submit() {
-    form.post(route("dashboard.produk.update", props.produk.id), {
+    form.post(route("bahan-baku.update", props.bahanBaku.id), {
         preserveScroll: true,
     });
-}
-
-function handleFileChange(e) {
-    const file = e.target.files[0];
-    form.gambar = file;
-    
-    // Create preview URL for selected image
-    if (file) {
-        imagePreview.value = URL.createObjectURL(file);
-    }
 }
 </script>
 
 <template>
-    <Head title="Edit Produk" />
+    <Head title="Edit Bahan Baku" />
 
     <AuthenticatedLayout>
         <div class="py-12">
@@ -44,18 +31,14 @@ function handleFileChange(e) {
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-semibold mb-4">
-                            Form Edit Produk
+                            Form Edit Bahan Baku
                         </h3>
 
-                        <!-- Form Input Produk -->
-                        <form
-                            @submit.prevent="submit"
-                            enctype="multipart/form-data"
-                        >
+                        <form @submit.prevent="submit">
                             <div class="mb-4">
                                 <label
                                     class="block text-sm font-medium text-gray-700"
-                                    >Nama Produk</label
+                                    >Nama Bahan</label
                                 >
                                 <input
                                     v-model="form.nama"
@@ -67,43 +50,6 @@ function handleFileChange(e) {
                                     class="text-red-600 text-sm mt-1"
                                 >
                                     {{ form.errors.nama }}
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Tipe Produk</label
-                                >
-                                <input
-                                    v-model="form.tipe"
-                                    type="text"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                                <div
-                                    v-if="form.errors.tipe"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.tipe }}
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Harga</label
-                                >
-                                <input
-                                    v-model="form.harga"
-                                    type="number"
-                                    min="0"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                                <div
-                                    v-if="form.errors.harga"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.harga }}
                                 </div>
                             </div>
 
@@ -129,36 +75,61 @@ function handleFileChange(e) {
                             <div class="mb-4">
                                 <label
                                     class="block text-sm font-medium text-gray-700"
+                                    >Satuan</label
                                 >
-                                    Gambar Produk
-                                </label>
-                                
-                                <!-- Image Preview -->
-                                <div v-if="imagePreview" class="mt-2 mb-4">
-                                    <img 
-                                        :src="imagePreview" 
-                                        class="w-32 h-32 object-cover rounded-lg border"
-                                        alt="Preview" 
-                                    />
-                                </div>
-
                                 <input
-                                    type="file"
-                                    @input="handleFileChange"
-                                    accept="image/*"
-                                    class="mt-1 block w-full"
+                                    v-model="form.satuan"
+                                    type="text"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                                 <div
-                                    v-if="form.errors.gambar"
+                                    v-if="form.errors.satuan"
                                     class="text-red-600 text-sm mt-1"
                                 >
-                                    {{ form.errors.gambar }}
+                                    {{ form.errors.satuan }}
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Minimum Stok</label
+                                >
+                                <input
+                                    v-model="form.minimum_stok"
+                                    type="number"
+                                    min="0"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                />
+                                <div
+                                    v-if="form.errors.minimum_stok"
+                                    class="text-red-600 text-sm mt-1"
+                                >
+                                    {{ form.errors.minimum_stok }}
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Keterangan</label
+                                >
+                                <textarea
+                                    v-model="form.keterangan"
+                                    rows="3"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                ></textarea>
+                                <div
+                                    v-if="form.errors.keterangan"
+                                    class="text-red-600 text-sm mt-1"
+                                >
+                                    {{ form.errors.keterangan }}
                                 </div>
                             </div>
 
                             <div class="flex justify-end">
                                 <Link
-                                    :href="route('dashboard.produk.index')"
+                                    :href="route('bahan-baku.index')"
                                     class="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-200 transition"
                                     >Batal</Link
                                 >

@@ -10,12 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('detail_transaksi', function (Blueprint $table) {
+        // Create bahan_baku table (singular)
+        Schema::create('bahan_baku', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transaksi_id')->constrained('transaksi')->onDelete('cascade');
-            $table->foreignId('produk_id')->constrained('produks')->onDelete('cascade');
-            $table->integer('jumlah');
-            $table->decimal('harga_satuan', 10, 2);
+            $table->string('nama');
+            $table->integer('stok');
+            $table->string('satuan');
+            $table->integer('minimum_stok')->default(0);
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +27,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('detail_transaksi');
+        Schema::dropIfExists('bahan_baku');
     }
 };
