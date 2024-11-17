@@ -14,20 +14,19 @@ class OrderController extends Controller
     // Method untuk menampilkan halaman order
     public function index(Request $request)
     {
-        $query = Produk::query()->where('stok', '>', 0);
+        $query = Produk::query();
 
         if ($request->has('search')) {
             $searchTerm = $request->search;
             $query->where('nama', 'LIKE', "%{$searchTerm}%");
         }
 
-        $products = $query->get();
-        $selectedItems = session('selected_items', []);
+        $produks = $query->paginate(9); // Paginate 9 items per page
 
         return Inertia::render('Order/index', [
-            'products' => $products,
-            'selectedItems' => $selectedItems,
-            'filters' => $request->only(['search'])
+            'produks' => $produks,
+            'filters' => $request->only(['search']),
+            'hero' => 'Order Menu'
         ]);
     }
 
@@ -83,29 +82,45 @@ class OrderController extends Controller
     // Method untuk memproses order
     public function processOrder(Request $request)
     {
-        $items = $request->items;
-
-        if (empty($items)) {
-            return back()->with('error', 'Order kosong');
+        $cart = $request->cart;
+        
+        if (empty($cart)) {
+            return back()->with('error', 'Cart is empty');
         }
 
-        // Validasi stok
-        foreach ($items as $item) {
-            $product = Produk::find($item['id']);
-            if ($product->stok < $item['quantity']) {
-                return back()->with('error', "Stok {$product->nama} tidak mencukupi");
+        DB::beginTransaction();
+        try {
+            // Validate stock availability
+            foreach ($cart as $item) {
+                $product = Produk::find($item['id']);
+                if (!$product || $product->stok < $item['quantity']) {
+                    throw new \Exception("Insufficient stock for {$product->nama}");
+                }
             }
+
+            // Create transaction and reduce stock
+            $transaction = Transaksi::create([
+                'total_harga' => collect($cart)->sum(fn($item) => $item['harga'] * $item['quantity'])
+            ]);
+
+            foreach ($cart as $item) {
+                $product = Produk::find($item['id']);
+                $product->decrement('stok', $item['quantity']);
+                
+                TransaksiDetail::create([
+                    'transaksi_id' => $transaction->id,
+                    'produk_id' => $item['id'],
+                    'jumlah' => $item['quantity'],
+                    'harga_satuan' => $item['harga']
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('order.invoice', $transaction->id);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', $e->getMessage());
         }
-
-        // Simpan items ke session untuk digunakan kembali
-        session()->put('selected_items', $items);
-
-        return Inertia::render('Order/Kasir', [
-            'orderItems' => $items,
-            'total' => collect($items)->sum(function ($item) {
-                return $item['price'] * $item['quantity'];
-            })
-        ]);
     }
 
     public function kasir()

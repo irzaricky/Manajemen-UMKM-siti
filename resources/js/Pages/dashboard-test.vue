@@ -2,76 +2,53 @@
 import Hero from "@/Components/Hero.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link, router } from "@inertiajs/vue3";
-import { computed, onMounted, reactive, watch } from "vue";
+import { Head, Link } from "@inertiajs/vue3";
+import { computed, onMounted, reactive } from "vue";
 
 const props = defineProps({
     hero: String,
     produks: Object,
-    filters: Object,
 });
 
-const produkList = computed(() => props.produks?.data || []);
+const produkList = computed(() => props.produks.data);
 
-// State management
+// State global untuk menyimpan jumlah barang berdasarkan ID produk
 const quantities = reactive({});
 const cart = reactive([]);
 
-// Load cart data from localStorage
+// Muat data dari localStorage saat komponen dimount
 onMounted(() => {
-    try {
-        const storedQuantities = JSON.parse(localStorage.getItem("quantities"));
-        const storedCart = JSON.parse(localStorage.getItem("cart"));
+    const storedQuantities =
+        JSON.parse(localStorage.getItem("quantities")) || {};
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
 
-        if (storedQuantities && typeof storedQuantities === "object") {
-            Object.assign(quantities, storedQuantities);
-        }
-
-        if (Array.isArray(storedCart)) {
-            cart.push(...storedCart);
-        }
-    } catch (error) {
-        console.error("Error loading cart data:", error);
-        Object.assign(quantities, {});
-        cart.length = 0;
-    }
+    Object.assign(quantities, storedQuantities);
+    cart.push(...storedCart);
 });
 
-// Watch for cart changes and sync with localStorage
-watch(() => [...cart], saveCartData, { deep: true });
-watch(quantities, saveCartData, { deep: true });
-
-// Save cart data to localStorage
-function saveCartData() {
-    try {
-        localStorage.setItem("quantities", JSON.stringify(quantities));
-        localStorage.setItem("cart", JSON.stringify(cart));
-    } catch (error) {
-        console.error("Error saving cart data:", error);
-    }
+// Fungsi untuk menyimpan data quantities ke localStorage
+function saveQuantities() {
+    localStorage.setItem("quantities", JSON.stringify(quantities));
+    localStorage.setItem("cart", JSON.stringify(cart));
 }
 
-// Improved increment with stock validation
+// Fungsi untuk menambah jumlah barang
 function increment(id) {
     const produk = produkList.value.find((p) => p.id === id);
-    if (!produk) return;
 
-    const currentQty = quantities[id] || 0;
-
-    if (currentQty >= produk.stok) {
-        alert("Stok tidak mencukupi");
-        return;
+    if (produk.stok > (quantities[id] || 0)) {
+        if (!quantities[id]) quantities[id] = 0; // Default ke 0 jika belum ada
+        quantities[id]++;
+        saveQuantities();
+        addToCart(id);
     }
-
-    quantities[id] = currentQty + 1;
-    addToCart(id);
 }
 
 // Fungsi untuk mengurangi jumlah barang
 function decrement(id) {
     if (quantities[id] && quantities[id] > 0) {
         quantities[id]--;
-        saveCartData(); // Changed from saveQuantities
+        saveQuantities();
         removeFromCart(id);
     }
 }
@@ -86,7 +63,7 @@ function addToCart(id) {
         cart.push({ ...produk, quantity: quantities[id] });
     }
 
-    saveCartData(); // Changed from saveQuantities
+    saveQuantities();
 }
 
 function removeFromCart(id) {
@@ -98,7 +75,7 @@ function removeFromCart(id) {
         cart[index].quantity = quantities[id];
     }
 
-    saveCartData(); // Changed from saveQuantities
+    saveQuantities();
 }
 
 // Fungsi untuk menghapus cart dan quantities dari localStorage
@@ -110,21 +87,7 @@ function clearCart() {
     produkList.value.forEach((produk) => {
         quantities[produk.id] = 0; // Set default ke 0 jika belum ada
     });
-    saveCartData(); // Changed from saveQuantities
-}
-
-// Process checkout
-function processCheckout() {
-    router.post(
-        route("order.process"),
-        { cart },
-        {
-            onSuccess: () => {
-                // Clear cart after successful order
-                clearCart();
-            },
-        }
-    );
+    saveQuantities(); // Simpan kembali ke localStorage
 }
 </script>
 
@@ -148,7 +111,7 @@ function processCheckout() {
                                 >
                                     <img
                                         loading="lazy"
-                                        src="../../../../public/dummy.png"
+                                        src="../../../public/dummy.png"
                                         alt="Menu Image"
                                         class="rounded-lg"
                                     />
@@ -299,7 +262,7 @@ function processCheckout() {
                                     >
                                         <PrimaryButton
                                             v-if="cart.length > 0"
-                                            @click="processCheckout"
+                                            @click="clearCart"
                                         >
                                             Proceed to Checkout
                                         </PrimaryButton>

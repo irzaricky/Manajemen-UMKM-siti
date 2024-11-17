@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ListProdukController;
-use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BahanBakuController;
 use App\Http\Controllers\LaporanKeuntunganController;
@@ -27,7 +27,7 @@ Route::get('/', function () {
 
 
 Route::group(['middleware' => 'auth', 'verified'], function () {
-    Route::get('/dashboard', [ProdukController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('/dashboard/produk')->group(function () {
         Route::get('/', [ListProdukController::class, 'index'])->name('dashboard.produk.index');
