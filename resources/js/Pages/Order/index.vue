@@ -3,7 +3,8 @@ import Hero from "@/Components/Hero.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, router } from "@inertiajs/vue3";
-import { computed, onMounted, reactive, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
+import debounce from "lodash/debounce";
 
 const props = defineProps({
     hero: String,
@@ -16,6 +17,16 @@ const produkList = computed(() => props.produks?.data || []);
 // State management
 const quantities = reactive({});
 const cart = reactive([]);
+
+// Compute remaining stock for each product
+const remainingStock = computed(() => {
+    const stockMap = {};
+    produkList.value.forEach((produk) => {
+        const cartItem = cart.find((item) => item.id === produk.id);
+        stockMap[produk.id] = produk.stok - (cartItem?.quantity || 0);
+    });
+    return stockMap;
+});
 
 // Load cart data from localStorage
 onMounted(() => {
@@ -83,10 +94,16 @@ function addToCart(id) {
     if (existingItem) {
         existingItem.quantity = quantities[id];
     } else {
-        cart.push({ ...produk, quantity: quantities[id] });
+        cart.push({
+            id: produk.id,
+            nama: produk.nama,
+            harga: produk.harga,
+            quantity: quantities[id],
+            stok: produk.stok,
+        });
     }
 
-    saveCartData(); // Changed from saveQuantities
+    saveCartData();
 }
 
 function removeFromCart(id) {
@@ -126,6 +143,38 @@ function processCheckout() {
         }
     );
 }
+
+// Add search state
+const search = ref(props.filters?.search || "");
+
+// Add debounced search function
+const performSearch = debounce((value) => {
+    router.get(
+        route("order.index"),
+        { search: value },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        }
+    );
+}, 300);
+
+// Watch for search input changes
+watch(search, (value) => {
+    performSearch(value);
+});
+
+// Tambahkan class untuk mencegah scrollbar shift
+const preventScrollbarShift = {
+    mounted() {
+        document.body.style.paddingRight =
+            window.innerWidth - document.documentElement.clientWidth + "px";
+    },
+    unmounted() {
+        document.body.style.paddingRight = "";
+    },
+};
 </script>
 
 <template>
@@ -136,12 +185,41 @@ function processCheckout() {
         <div class="py-12">
             <div class="mx-16 sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                    <!-- Add search input -->
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-gray-800">
+                                Menu
+                            </h2>
+                            <div class="flex items-center">
+                                <input
+                                    v-model="search"
+                                    type="text"
+                                    placeholder="Cari menu..."
+                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#648374] focus:border-[#648374] transition-colors"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex gap-6 p-6">
-                        <div class="flex flex-col">
+                        <div class="flex flex-col w-2/3">
                             <div
                                 class="grid grid-cols sm:grid-cols-2 lg:grid-cols-3 gap-6"
                             >
                                 <div
+                                    v-if="!produkList.length"
+                                    class="col-span-full flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg"
+                                >
+                                    <p class="text-gray-500 text-lg">
+                                        Tidak ada menu yang ditemukan
+                                    </p>
+                                    <p class="text-gray-400">
+                                        Coba kata kunci pencarian lain
+                                    </p>
+                                </div>
+                                <div
+                                    v-else
                                     v-for="produk in produkList"
                                     :key="produk.id"
                                     class="bg-white shadow rounded-lg p-4"
@@ -159,6 +237,22 @@ function processCheckout() {
                                     </div>
                                     <div class="text-base text-gray-700">
                                         Rp {{ produk.harga.toLocaleString() }}
+                                    </div>
+                                    <!-- Add remaining stock display -->
+                                    <div
+                                        class="text-sm mt-1"
+                                        :class="{
+                                            'text-red-600':
+                                                remainingStock[produk.id] <= 5,
+                                            'text-yellow-600':
+                                                remainingStock[produk.id] > 5 &&
+                                                remainingStock[produk.id] <= 10,
+                                            'text-green-600':
+                                                remainingStock[produk.id] > 10,
+                                        }"
+                                    >
+                                        Stok tersisa:
+                                        {{ remainingStock[produk.id] }}
                                     </div>
                                     <div
                                         class="flex items-center justify-start gap-x-4 mt-4"
@@ -203,7 +297,7 @@ function processCheckout() {
                                 <ul
                                     class="flex mt-6 gap-5 justify-center items-center font-bold text-gray-500"
                                 >
-                                    <li>
+                                    <li v-if="props.produks.prev_page_url">
                                         <Link
                                             :href="props.produks.prev_page_url"
                                             class="rounded-md transform transition-transform duration-100 hover:scale-105 hover:text-black text-xl"
@@ -211,7 +305,7 @@ function processCheckout() {
                                             &lt; Prev
                                         </Link>
                                     </li>
-                                    <li>
+                                    <li v-if="props.produks.next_page_url">
                                         <Link
                                             :href="props.produks.next_page_url"
                                             class="rounded-md transform transition-transform duration-100 hover:scale-105 hover:text-black text-xl"
@@ -222,87 +316,91 @@ function processCheckout() {
                                 </ul>
                             </nav>
                         </div>
-                        <div
-                            class="shrink-0 md:rotate-0 border border-solid opacity-40 bg-zinc-500 border-zinc-500 mx-5 hidden md:block"
-                        ></div>
-                        <div class="flex flex-col w-[45%]">
-                            <h1
-                                class="font-bold text-3xl text-center justify-center"
-                            >
-                                Preview Pesanan
-                            </h1>
-                            <hr
-                                data-layername="pembatas preview pesanan"
-                                class="md:mt-4 mt-3 w-full border border-solid bg-zinc-500 border-zinc-500 min-h-[2px] opacity-[0.32]"
-                                aria-hidden="true"
-                            />
-                            <div class="bg-gray-200 mt-4 rounded-lg">
-                                <div class="p-4">
-                                    <div
-                                        v-for="item in cart"
-                                        :key="item.id"
-                                        class="flex items-center justify-between border-b py-2"
-                                    >
-                                        <div>
-                                            <p class="text-sm font-semibold">
-                                                {{ item.nama }}
-                                            </p>
-                                            <p class="text-sm text-gray-600">
+                        <div class="w-1/3 sticky top-4">
+                            <div class="bg-white shadow-lg rounded-lg p-6">
+                                <h1
+                                    class="font-bold text-3xl text-center justify-center"
+                                >
+                                    Preview Pesanan
+                                </h1>
+                                <hr
+                                    data-layername="pembatas preview pesanan"
+                                    class="md:mt-4 mt-3 w-full border border-solid bg-zinc-500 border-zinc-500 min-h-[2px] opacity-[0.32]"
+                                    aria-hidden="true"
+                                />
+                                <div class="bg-gray-200 mt-4 rounded-lg">
+                                    <div class="p-4">
+                                        <div
+                                            v-for="item in cart"
+                                            :key="item.id"
+                                            class="flex items-center justify-between border-b py-2"
+                                        >
+                                            <div>
+                                                <p
+                                                    class="text-sm font-semibold"
+                                                >
+                                                    {{ item.nama }}
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-600"
+                                                >
+                                                    Rp
+                                                    {{
+                                                        item.harga.toLocaleString()
+                                                    }}
+                                                    x {{ item.quantity }}
+                                                </p>
+                                            </div>
+                                            <p class="text-sm font-bold">
                                                 Rp
                                                 {{
-                                                    item.harga.toLocaleString()
+                                                    (
+                                                        item.harga *
+                                                        item.quantity
+                                                    ).toLocaleString()
                                                 }}
-                                                x {{ item.quantity }}
                                             </p>
                                         </div>
-                                        <p class="text-sm font-bold">
-                                            Rp
-                                            {{
-                                                (
-                                                    item.harga * item.quantity
-                                                ).toLocaleString()
-                                            }}
-                                        </p>
-                                    </div>
-                                    <hr
-                                        data-layername="pembatas preview pesanan"
-                                        class="md:mt-4 mt-3 w-full border border-solid bg-zinc-500 border-zinc-500 min-h-[2px] opacity-[0.32]"
-                                        aria-hidden="true"
-                                    />
-                                    <div
-                                        class="flex justify-between border-t pt-2"
-                                    >
-                                        <p
-                                            class="text-lg font-semibold text-right"
+                                        <hr
+                                            data-layername="pembatas preview pesanan"
+                                            class="md:mt-4 mt-3 w-full border border-solid bg-zinc-500 border-zinc-500 min-h-[2px] opacity-[0.32]"
+                                            aria-hidden="true"
+                                        />
+                                        <div
+                                            class="flex justify-between border-t pt-2"
                                         >
-                                            Total:
-                                        </p>
-                                        <p
-                                            class="text-lg font-semibold text-right"
+                                            <p
+                                                class="text-lg font-semibold text-right"
+                                            >
+                                                Total:
+                                            </p>
+                                            <p
+                                                class="text-lg font-semibold text-right"
+                                            >
+                                                Rp
+                                                {{
+                                                    cart
+                                                        .reduce(
+                                                            (total, item) =>
+                                                                total +
+                                                                item.harga *
+                                                                    item.quantity,
+                                                            0
+                                                        )
+                                                        .toLocaleString()
+                                                }}
+                                            </p>
+                                        </div>
+                                        <div
+                                            class="mt-4 flex items-center justify-center"
                                         >
-                                            Rp
-                                            {{
-                                                cart
-                                                    .reduce(
-                                                        (total, item) =>
-                                                            total +
-                                                            item.harga *
-                                                                item.quantity,
-                                                        0
-                                                    )
-                                                    .toLocaleString()
-                                            }}
-                                        </p>
-                                    </div>
-                                    <div
-                                        class="mt-4 flex items-center justify-center"
-                                    >
-                                        <PrimaryButton
-                                            v-if="cart.length > 0"
-                                            @click="processCheckout"
-                                        >
-                                            Proceed to Checkout
-                                        </PrimaryButton>
+                                            <PrimaryButton
+                                                v-if="cart.length > 0"
+                                                @click="processCheckout"
+                                            >
+                                                Proceed to Checkout
+                                            </PrimaryButton>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -313,3 +411,11 @@ function processCheckout() {
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style>
+/* Tambahkan CSS untuk memastikan layout tetap stabil */
+.sticky {
+    position: sticky;
+    height: fit-content;
+}
+</style>

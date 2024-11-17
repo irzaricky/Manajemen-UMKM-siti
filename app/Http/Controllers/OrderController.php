@@ -21,7 +21,7 @@ class OrderController extends Controller
             $query->where('nama', 'LIKE', "%{$searchTerm}%");
         }
 
-        $produks = $query->paginate(9); // Paginate 9 items per page
+        $produks = $query->paginate(9);
 
         return Inertia::render('Order/index', [
             'produks' => $produks,
@@ -83,7 +83,7 @@ class OrderController extends Controller
     public function processOrder(Request $request)
     {
         $cart = $request->cart;
-        
+
         if (empty($cart)) {
             return back()->with('error', 'Cart is empty');
         }
@@ -106,7 +106,7 @@ class OrderController extends Controller
             foreach ($cart as $item) {
                 $product = Produk::find($item['id']);
                 $product->decrement('stok', $item['quantity']);
-                
+
                 TransaksiDetail::create([
                     'transaksi_id' => $transaction->id,
                     'produk_id' => $item['id'],
