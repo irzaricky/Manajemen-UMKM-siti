@@ -14,11 +14,10 @@ export default {
                 </svg>`,
                 `<a href="https://youtube.com/"><div class="py-2 px-3 mx-1 bg-white rounded-md"><svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17.4938 2.15625C17.8688 3.46875 17.8688 6.28125 17.8688 6.28125C17.8688 6.28125 17.8688 9.0625 17.4938 10.4062C17.3063 11.1562 16.7125 11.7188 15.9938 11.9062C14.65 12.25 9.33752 12.25 9.33752 12.25C9.33752 12.25 3.99377 12.25 2.65002 11.9062C1.93127 11.7188 1.33752 11.1562 1.15002 10.4062C0.775024 9.0625 0.775024 6.28125 0.775024 6.28125C0.775024 6.28125 0.775024 3.46875 1.15002 2.15625C1.33752 1.40625 1.93127 0.8125 2.65002 0.625C3.99377 0.25 9.33752 0.25 9.33752 0.25C9.33752 0.25 14.65 0.25 15.9938 0.625C16.7125 0.8125 17.3063 1.40625 17.4938 2.15625ZM7.58752 8.8125L12.025 6.28125L7.58752 3.75V8.8125Z" fill="#1E1E1E" />
-                </svg></div></a>`
-
-            ]
+                </svg></div></a>`,
+            ],
         };
-    }
+    },
 };
 </script>
 
@@ -26,10 +25,14 @@ export default {
     <footer class="w-full bg-[#4F4F4F] text-white text-sm">
         <div class="flex px-12 py-3 justify-between">
             <div class="text-start py-2">
-                Copyright © 2022 by Ayeman. All Rights Reserved.
+                Copyright © 2022 by Adyan. All Rights Reserved.
             </div>
             <div class="flex items-center">
-                <div v-for="(icon, index) in icons" :key="index" v-html="icon"></div>
+                <div
+                    v-for="(icon, index) in icons"
+                    :key="index"
+                    v-html="icon"
+                ></div>
             </div>
         </div>
     </footer>
