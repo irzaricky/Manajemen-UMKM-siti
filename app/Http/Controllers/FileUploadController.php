@@ -11,7 +11,8 @@ class FileUploadController
     public function uploadFile(UploadedFile $file, string $path): string
     {
         $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        $file->storeAs("/$path", $filename);
+        // Store in public disk
+        $file->storeAs("public/$path", $filename);
         return "$path/$filename";
     }
 
