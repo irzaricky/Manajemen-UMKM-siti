@@ -30,6 +30,13 @@ class OrderController extends Controller
         ]);
     }
 
+    public function checkout(Request $request)
+    {
+        return Inertia::render('Order/Checkout', [
+            'cart' => $request->cart,
+        ]);
+    }
+
     // Method untuk menambah item ke order
     public function addToOrder(Request $request)
     {
@@ -164,7 +171,6 @@ class OrderController extends Controller
             return Inertia::render('Order/Invoice', [
                 'transaction' => $transaction
             ]);
-
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Failed to process transaction: ' . $e->getMessage());

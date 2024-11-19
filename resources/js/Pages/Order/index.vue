@@ -3,8 +3,8 @@ import Hero from "@/Components/Hero.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, router } from "@inertiajs/vue3";
-import { computed, onMounted, reactive, ref, watch } from "vue";
 import debounce from "lodash/debounce";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 
 const props = defineProps({
     hero: String,
@@ -132,16 +132,7 @@ function clearCart() {
 
 // Process checkout
 function processCheckout() {
-    router.post(
-        route("order.process"),
-        { cart },
-        {
-            onSuccess: () => {
-                // Clear cart after successful order
-                clearCart();
-            },
-        }
-    );
+    router.get(route("checkout.show"), { cart });
 }
 
 // Add search state
@@ -276,13 +267,13 @@ const preventScrollbarShift = {
                                                 quantities[produk.id] >=
                                                     produk.stok
                                             "
-                                            class="text-white font-bold py-2 px-3 rounded bg-green-500 hover:bg-green-700"
+                                            class="text-white font-bold py-2 px-3 rounded bg-[#648374]"
                                             :class="{
                                                 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed':
                                                     produk.stok === 0 ||
                                                     quantities[produk.id] >=
                                                         produk.stok,
-                                                'bg-green-500 hover:bg-green-700':
+                                                'bg-[#648374] hover:bg-[#355245]':
                                                     produk.stok > 0 &&
                                                     quantities[produk.id] <
                                                         produk.stok,
