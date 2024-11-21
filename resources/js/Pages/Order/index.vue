@@ -4,7 +4,7 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import debounce from "lodash/debounce";
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps({
     hero: String,
@@ -12,133 +12,90 @@ const props = defineProps({
     filters: Object,
 });
 
-const produkList = computed(() => props.produks?.data || []);
+// Convert products data to reactive ref with temp stock
+const productList = ref(
+    (props.produks?.data || []).map((produk) => ({
+        ...produk,
+        tempStock: produk.stok,
+    }))
+);
 
-// State management
-const quantities = reactive({});
-const cart = reactive([]);
+// Order management
+const orderItems = ref({});
 
-// Compute remaining stock for each product
+// Computed property for remaining stock
 const remainingStock = computed(() => {
     const stockMap = {};
-    produkList.value.forEach((produk) => {
-        const cartItem = cart.find((item) => item.id === produk.id);
-        stockMap[produk.id] = produk.stok - (cartItem?.quantity || 0);
+    productList.value.forEach((produk) => {
+        stockMap[produk.id] = produk.tempStock;
     });
     return stockMap;
 });
 
-// Load cart data from localStorage
-onMounted(() => {
-    try {
-        const storedQuantities = JSON.parse(localStorage.getItem("quantities"));
-        const storedCart = JSON.parse(localStorage.getItem("cart"));
-
-        if (storedQuantities && typeof storedQuantities === "object") {
-            Object.assign(quantities, storedQuantities);
-        }
-
-        if (Array.isArray(storedCart)) {
-            cart.push(...storedCart);
-        }
-    } catch (error) {
-        console.error("Error loading cart data:", error);
-        Object.assign(quantities, {});
-        cart.length = 0;
-    }
+// Computed for order total
+const orderTotal = computed(() => {
+    return Object.values(orderItems.value).reduce((total, item) => {
+        return total + item.harga * item.quantity;
+    }, 0);
 });
 
-// Watch for cart changes and sync with localStorage
-watch(() => [...cart], saveCartData, { deep: true });
-watch(quantities, saveCartData, { deep: true });
-
-// Save cart data to localStorage
-function saveCartData() {
-    try {
-        localStorage.setItem("quantities", JSON.stringify(quantities));
-        localStorage.setItem("cart", JSON.stringify(cart));
-    } catch (error) {
-        console.error("Error saving cart data:", error);
-    }
-}
-
-// Improved increment with stock validation
+// Add to order function
 function increment(id) {
-    const produk = produkList.value.find((p) => p.id === id);
-    if (!produk) return;
-
-    const currentQty = quantities[id] || 0;
-
-    if (currentQty >= produk.stok) {
+    const produk = productList.value.find((p) => p.id === id);
+    if (!produk || produk.tempStock <= 0) {
         alert("Stok tidak mencukupi");
         return;
     }
 
-    quantities[id] = currentQty + 1;
-    addToCart(id);
-}
-
-// Fungsi untuk mengurangi jumlah barang
-function decrement(id) {
-    if (quantities[id] && quantities[id] > 0) {
-        quantities[id]--;
-        saveCartData(); // Changed from saveQuantities
-        removeFromCart(id);
-    }
-}
-
-function addToCart(id) {
-    const produk = produkList.value.find((p) => p.id === id);
-    const existingItem = cart.find((item) => item.id === id);
-
-    if (existingItem) {
-        existingItem.quantity = quantities[id];
-    } else {
-        cart.push({
+    if (!orderItems.value[id]) {
+        orderItems.value[id] = {
             id: produk.id,
             nama: produk.nama,
             harga: produk.harga,
-            quantity: quantities[id],
+            quantity: 1,
             stok: produk.stok,
-        });
+        };
+    } else {
+        orderItems.value[id].quantity++;
     }
 
-    saveCartData();
+    produk.tempStock--;
 }
 
-function removeFromCart(id) {
-    const index = cart.findIndex((item) => item.id === id);
+// Remove from order function
+function decrement(id) {
+    const item = orderItems.value[id];
+    if (!item || item.quantity <= 0) return;
 
-    if (index !== -1 && quantities[id] === 0) {
-        cart.splice(index, 1);
-    } else if (index !== -1) {
-        cart[index].quantity = quantities[id];
+    const produk = productList.value.find((p) => p.id === id);
+    item.quantity--;
+    produk.tempStock++;
+
+    if (item.quantity === 0) {
+        delete orderItems.value[id];
     }
-
-    saveCartData(); // Changed from saveQuantities
-}
-
-// Fungsi untuk menghapus cart dan quantities dari localStorage
-function clearCart() {
-    localStorage.removeItem("cart"); // Hapus cart dari localStorage
-    localStorage.removeItem("quantities"); // Hapus quantities dari localStorage
-    cart.length = 0; // Reset cart array
-    // Reset quantities untuk semua produk dalam produkList
-    produkList.value.forEach((produk) => {
-        quantities[produk.id] = 0; // Set default ke 0 jika belum ada
-    });
-    saveCartData(); // Changed from saveQuantities
 }
 
 // Process checkout
 function processCheckout() {
-    router.get(route("order.kasir"), { cart });
+    // Kirim cart ke session melalui route order.add
+    router.post(
+        route("order.add"),
+        {
+            items: Object.values(orderItems.value),
+        },
+        {
+            onSuccess: () => {
+                // Setelah berhasil, redirect ke kasir
+                router.get(route("order.kasir"));
+            },
+        }
+    );
 }
 
-// Add search state
+// Search functionality
 const search = ref(props.filters?.search || "");
 
-// Add debounced search function
 const performSearch = debounce((value) => {
     router.get(
         route("order.index"),
@@ -151,21 +108,21 @@ const performSearch = debounce((value) => {
     );
 }, 300);
 
-// Watch for search input changes
 watch(search, (value) => {
     performSearch(value);
 });
 
-// Tambahkan class untuk mencegah scrollbar shift
-const preventScrollbarShift = {
-    mounted() {
-        document.body.style.paddingRight =
-            window.innerWidth - document.documentElement.clientWidth + "px";
-    },
-    unmounted() {
-        document.body.style.paddingRight = "";
-    },
-};
+// Computed for quantities (for UI compatibility)
+const quantities = computed(() => {
+    const qty = {};
+    Object.values(orderItems.value).forEach((item) => {
+        qty[item.id] = item.quantity;
+    });
+    return qty;
+});
+
+// Computed for cart (for UI compatibility)
+const cart = computed(() => Object.values(orderItems.value));
 </script>
 
 <template>
@@ -199,7 +156,7 @@ const preventScrollbarShift = {
                                 class="grid grid-cols sm:grid-cols-2 lg:grid-cols-3 gap-6"
                             >
                                 <div
-                                    v-if="!produkList.length"
+                                    v-if="!productList.length"
                                     class="col-span-full flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg"
                                 >
                                     <p class="text-gray-500 text-lg">
@@ -211,7 +168,7 @@ const preventScrollbarShift = {
                                 </div>
                                 <div
                                     v-else
-                                    v-for="produk in produkList"
+                                    v-for="produk in productList"
                                     :key="produk.id"
                                     class="bg-white shadow rounded-lg p-4"
                                 >

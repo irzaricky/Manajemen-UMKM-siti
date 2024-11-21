@@ -33,33 +33,26 @@ class OrderController extends Controller
     // Method untuk menambah item ke order
     public function addToOrder(Request $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:produks,id',
-            'quantity' => 'required|integer|min:1'
-        ]);
+        $items = $request->items;
 
-        $product = Produk::findOrFail($request->product_id);
-
-        if ($product->stok < $request->quantity) {
-            return back()->with('error', 'Stok tidak mencukupi');
+        if (empty($items)) {
+            return back()->with('error', 'No items to add');
         }
 
-        $order = session()->get('order', []);
-
-        if (isset($order[$request->product_id])) {
-            $order[$request->product_id]['quantity'] += $request->quantity;
-        } else {
-            $order[$request->product_id] = [
-                'id' => $product->id,
-                'name' => $product->nama,
-                'price' => $product->harga,
-                'quantity' => $request->quantity
+        // Simpan ke session
+        $order = [];
+        foreach ($items as $item) {
+            $order[$item['id']] = [
+                'id' => $item['id'],
+                'name' => $item['nama'],
+                'price' => $item['harga'],
+                'quantity' => $item['quantity']
             ];
         }
 
         session()->put('order', $order);
 
-        return back()->with('success', 'Produk berhasil ditambahkan ke order');
+        return back()->with('success', 'Items added to cart');
     }
 
     // Method untuk menghapus item dari order
