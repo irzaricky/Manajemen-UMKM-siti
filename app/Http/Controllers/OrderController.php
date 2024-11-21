@@ -23,10 +23,14 @@ class OrderController extends Controller
 
         $produks = $query->paginate(9);
 
+        // Get cart data from session
+        $cartSession = session('order', []);
+
         return Inertia::render('Order/index', [
             'produks' => $produks,
             'filters' => $request->only(['search']),
-            'hero' => 'Order Menu'
+            'hero' => 'Order Menu',
+            'cart_session' => $cartSession // Pass session data to view
         ]);
     }
 

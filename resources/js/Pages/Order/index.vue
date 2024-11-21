@@ -4,12 +4,13 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import debounce from "lodash/debounce";
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onMounted } from "vue";
 
 const props = defineProps({
     hero: String,
     produks: Object,
     filters: Object,
+    cart_session: Object, // Add this prop to receive session data
 });
 
 // Convert products data to reactive ref with temp stock
@@ -22,6 +23,26 @@ const productList = ref(
 
 // Order management
 const orderItems = ref({});
+
+// Initialize cart from session data on mount
+onMounted(() => {
+    if (props.cart_session) {
+        Object.values(props.cart_session).forEach((item) => {
+            orderItems.value[item.id] = {
+                id: item.id,
+                nama: item.name,
+                harga: item.price,
+                quantity: item.quantity,
+            };
+
+            // Update tempStock
+            const product = productList.value.find((p) => p.id === item.id);
+            if (product) {
+                product.tempStock -= item.quantity;
+            }
+        });
+    }
+});
 
 // Computed property for remaining stock
 const remainingStock = computed(() => {
@@ -346,7 +367,7 @@ const cart = computed(() => Object.values(orderItems.value));
                                                 v-if="cart.length > 0"
                                                 @click="processCheckout"
                                             >
-                                                Proceed to Checkout
+                                                Masukan Pesanan
                                             </PrimaryButton>
                                         </div>
                                     </div>
