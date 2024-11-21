@@ -15,7 +15,6 @@ const form = useForm({
     jumlah: "",
     harga_per_unit: "",
     tanggal_pembelian: "",
-    nomor_invoice: "",
     keterangan: "",
 });
 
@@ -77,21 +76,6 @@ function submit() {
                         </h2>
 
                         <form @submit.prevent="submit">
-                            <!-- Nomor Invoice -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                >
-                                    Nomor Invoice
-                                </label>
-                                <input
-                                    v-model="form.nomor_invoice"
-                                    type="text"
-                                    required
-                                    class="mt-1 block w-full rounded-md border-gray-300"
-                                />
-                            </div>
-
                             <!-- Jumlah -->
                             <div class="mb-4">
                                 <label

@@ -86,6 +86,24 @@ class BahanBakuController extends Controller
             ->with('success', 'Bahan baku berhasil dihapus');
     }
 
+    private function generateInvoiceNumber()
+    {
+        $now = now();
+        $year = $now->year;
+        $month = str_pad($now->month, 2, '0', STR_PAD_LEFT);
+
+        // Get latest counter for current month
+        $latestInvoice = PembelianBahanBaku::whereYear('tanggal_pembelian', $year)
+            ->whereMonth('tanggal_pembelian', $month)
+            ->latest()
+            ->first();
+
+        $counter = $latestInvoice ? intval(substr($latestInvoice->nomor_invoice, -4)) + 1 : 1;
+        $counterPadded = str_pad($counter, 4, '0', STR_PAD_LEFT);
+
+        return "INV/BBK/{$year}/{$month}/{$counterPadded}";
+    }
+
     public function storePembelian(Request $request)
     {
         $validated = $request->validate([
@@ -93,24 +111,25 @@ class BahanBakuController extends Controller
             'jumlah' => 'required|numeric|min:1',
             'harga_per_unit' => 'required|numeric|min:0',
             'tanggal_pembelian' => 'required|date',
-            'nomor_invoice' => 'required|string|max:255',
             'keterangan' => 'nullable|string'
         ]);
 
         DB::beginTransaction();
         try {
-            // Buat record pembelian
+            // Auto-generate invoice number
+            $invoiceNumber = $this->generateInvoiceNumber();
+
             $pembelian = PembelianBahanBaku::create([
                 'bahan_baku_id' => $validated['bahan_baku_id'],
                 'jumlah' => $validated['jumlah'],
                 'harga_per_unit' => $validated['harga_per_unit'],
                 'total_harga' => $validated['jumlah'] * $validated['harga_per_unit'],
                 'tanggal_pembelian' => $validated['tanggal_pembelian'],
-                'nomor_invoice' => $validated['nomor_invoice'],
+                'nomor_invoice' => $invoiceNumber,
                 'keterangan' => $validated['keterangan']
             ]);
 
-            // Update stok bahan baku
+            // Update stok
             $bahanBaku = BahanBaku::findOrFail($validated['bahan_baku_id']);
             $bahanBaku->stok += $validated['jumlah'];
             $bahanBaku->save();
