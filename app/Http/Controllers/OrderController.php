@@ -141,6 +141,7 @@ class OrderController extends Controller
         ]);
     }
 
+    // For POST request (from order)
     public function invoice(Request $request)
     {
         // Validate request data
@@ -159,7 +160,8 @@ class OrderController extends Controller
             session()->forget(['order', 'selected_items']);
 
             return Inertia::render('Order/Invoice', [
-                'transaction' => $transaction
+                'transaction' => $transaction,
+                'source' => 'order'
             ]);
         } catch (\Exception $e) {
             return redirect()->back()
@@ -197,5 +199,16 @@ class OrderController extends Controller
             DB::rollBack();
             throw $e;
         }
+    }
+
+    // For GET request (from laporan)
+    public function showInvoice($id)
+    {
+        $transaction = Transaksi::with(['transaksiDetail.produk'])->findOrFail($id);
+
+        return Inertia::render('Order/Invoice', [
+            'transaction' => $transaction,
+            'source' => 'laporan'
+        ]);
     }
 }

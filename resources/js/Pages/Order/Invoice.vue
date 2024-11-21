@@ -1,9 +1,11 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
+import { computed } from "vue";
 
 const props = defineProps({
     transaction: Object,
+    source: String,
 });
 
 // Format tanggal
@@ -13,6 +15,13 @@ const formatDate = (date) => {
         timeStyle: "short",
     });
 };
+
+// Compute back route based on source
+const backRoute = computed(() => {
+    return props.source === "order"
+        ? route("order.index")
+        : route("laporan.detail", { date: props.transaction.tanggal });
+});
 </script>
 
 <template>
@@ -23,6 +32,28 @@ const formatDate = (date) => {
                 <div
                     class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6"
                 >
+                    <!-- Add back button -->
+                    <div class="mb-6">
+                        <Link
+                            :href="backRoute"
+                            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                                />
+                            </svg>
+                            Kembali
+                        </Link>
+                    </div>
                     <!-- Header Invoice -->
                     <div class="flex justify-between items-center mb-8">
                         <div>
@@ -133,12 +164,6 @@ const formatDate = (date) => {
                             >
                                 New Order
                             </Link>
-                            <button
-                                @click="window.print()"
-                                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                            >
-                                Print Invoice
-                            </button>
                         </div>
                     </div>
                 </div>

@@ -42,6 +42,7 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
         Route::get('/', [OrderController::class, 'index'])->name('order.index');
         Route::get('/kasir', [OrderController::class, 'kasir'])->name('order.kasir');
         Route::post('/invoice', [OrderController::class, 'invoice'])->name('order.invoice');
+        Route::get('/invoice/{id}', [OrderController::class, 'showInvoice'])->name('order.invoice.show');
         Route::post('/add', [OrderController::class, 'addToOrder'])->name('order.add');
         Route::post('/remove', [OrderController::class, 'removeFromOrder'])->name('order.remove');
         Route::post('/process', [OrderController::class, 'processOrder'])->name('order.process');
