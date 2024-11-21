@@ -132,7 +132,7 @@ function clearCart() {
 
 // Process checkout
 function processCheckout() {
-    router.get(route("checkout.show"), { cart });
+    router.get(route("order.kasir"), { cart });
 }
 
 // Add search state

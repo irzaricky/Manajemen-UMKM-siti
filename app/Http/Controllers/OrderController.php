@@ -30,13 +30,6 @@ class OrderController extends Controller
         ]);
     }
 
-    public function checkout(Request $request)
-    {
-        return Inertia::render('Order/Checkout', [
-            'cart' => $request->cart,
-        ]);
-    }
-
     // Method untuk menambah item ke order
     public function addToOrder(Request $request)
     {

@@ -30,17 +30,7 @@ const navigationLinks = [
         name: "Order Menu",
         href: route("order.index"),
         isActive: route().current("order.index"),
-    },
-    {
-        name: "Laporan Penjualan",
-        href: route("laporan.index"),
-        isActive: route().current("laporan.index"),
-    },
-    {
-        name: "Laporan keuntungan",
-        href: route("laporan.keuntungan.index"),
-        isActive: route().current("laporan.keuntungan.index"),
-    },
+    }
 ];
 </script>
 
@@ -66,6 +56,34 @@ const navigationLinks = [
                                     :active="link.isActive">
                                     {{ link.name }}
                                 </NavLink>
+                                <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                                    <div class="relative ms-3">
+                                        <Dropdown width="48">
+                                            <template #trigger>
+                                                <span class="flex rounded-md">
+                                                    <button
+                                                        class="inline-flex items-center rounded-md border border-transparent bg-transparent text-sm font-medium text-white transition duration-150 ease-in-out hover:text-[#648374] focus:outline-none">
+                                                        Laporan
+                                                        <svg class="ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                            viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd"
+                                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                                clip-rule="evenodd" />
+                                                        </svg>
+                                                    </button>
+                                                </span>
+                                            </template>
+                                            <template #content>
+                                                <DropdownLink :href="route('laporan.index')">
+                                                    Laporan Penjualan
+                                                </DropdownLink>
+                                                <DropdownLink :href="route('laporan.keuntungan.index')">
+                                                    Laporan Keuntungan
+                                                </DropdownLink>
+                                            </template>
+                                        </Dropdown>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
