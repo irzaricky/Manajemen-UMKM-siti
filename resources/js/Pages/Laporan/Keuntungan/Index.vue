@@ -47,16 +47,47 @@ const calculateMargin = (total_penjualan, total_modal) => {
 
 const formatPeriod = (date, period) => {
     const d = new Date(date);
+
     switch (period) {
-        case "weekly":
-            return `Minggu ${d.getWeek()} ${d.getFullYear()}`;
+        case "weekly": {
+            // Get the Monday of current week
+            const monday = new Date(d);
+            monday.setDate(d.getDate() - d.getDay() + 1);
+
+            // Get the Sunday of current week
+            const sunday = new Date(d);
+            sunday.setDate(d.getDate() - d.getDay() + 7);
+
+            // Format the date range
+            const startDate = monday.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+            });
+
+            const endDate = sunday.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+            });
+
+            return `${startDate} - ${endDate}`;
+        }
+
         case "monthly":
             return d.toLocaleDateString("id-ID", {
                 year: "numeric",
                 month: "long",
             });
-        default:
-            return formatDate(date);
+
+        case "yearly":
+            return d.getFullYear().toString();
+
+        default: // daily
+            return d.toLocaleDateString("id-ID", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            });
     }
 };
 </script>
@@ -88,7 +119,9 @@ const formatPeriod = (date, period) => {
                             <tr>
                                 <th class="px-6 py-3 text-left">Tanggal</th>
                                 <th class="px-6 py-3 text-right">Penjualan</th>
-                                <th class="px-6 py-3 text-right">Pembelian Bahan</th>
+                                <th class="px-6 py-3 text-right">
+                                    Pembelian Bahan
+                                </th>
                                 <th class="px-6 py-3 text-right">Keuntungan</th>
                                 <th class="px-6 py-3 text-right">Margin</th>
                                 <th class="px-6 py-3 text-right">Items</th>
