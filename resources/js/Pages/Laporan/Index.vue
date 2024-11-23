@@ -108,7 +108,7 @@ function editReport(report) {
                                             @click="editReport(report)"
                                             class="text-indigo-600 hover:text-indigo-900 mr-3"
                                         >
-                                            Edit
+                                            Detail
                                         </button>
                                     </td>
                                 </tr>

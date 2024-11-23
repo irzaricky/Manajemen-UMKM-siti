@@ -59,7 +59,7 @@ function goToCheckout() {
                             preserve-scroll
                             class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                         >
-                            Add Product
+                            Kembali
                         </Link>
                         <div class="text-right">
                             <p class="text-xl font-bold mb-2">
