@@ -198,20 +198,28 @@ function selectBahan(bahanId) {
                                 </tr>
                             </tbody>
                         </table>
-                        <button
-                            class="float-right my-8 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                            @click="
-                                $inertia.get(
-                                    route(
-                                        'bahan-baku.showBeli',
-                                        selectedBahanId
+                        <div class="float-right my-8 flex gap-2">
+                            <Link
+                                :href="route('bahan-baku.create')"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                            >
+                                Tambah Bahan Baku
+                            </Link>
+                            <button
+                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                @click="
+                                    $inertia.get(
+                                        route(
+                                            'bahan-baku.showBeli',
+                                            selectedBahanId
+                                        )
                                     )
-                                )
-                            "
-                            :disabled="!selectedBahanId"
-                        >
-                            Beli Bahan Baku
-                        </button>
+                                "
+                                :disabled="!selectedBahanId"
+                            >
+                                Beli Bahan Baku
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
