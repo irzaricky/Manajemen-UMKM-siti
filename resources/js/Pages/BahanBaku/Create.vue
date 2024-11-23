@@ -4,10 +4,10 @@ import { Head, Link, useForm } from "@inertiajs/vue3";
 
 const form = useForm({
     nama: "",
-    stok: "",
+    stok: 0,
     satuan: "",
-    minimum_stok: "",
-    keterangan: ""
+    minimum_stok: 0,
+    keterangan: "",
 });
 
 function submit() {
@@ -20,7 +20,6 @@ function submit() {
 
 <template>
     <Head title="Tambah Bahan Baku" />
-
     <AuthenticatedLayout>
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -31,6 +30,7 @@ function submit() {
                         </h3>
 
                         <form @submit.prevent="submit">
+                            <!-- Nama -->
                             <div class="mb-4">
                                 <label
                                     class="block text-sm font-medium text-gray-700"
@@ -39,6 +39,8 @@ function submit() {
                                 <input
                                     v-model="form.nama"
                                     type="text"
+                                    maxlength="255"
+                                    required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                                 <div
@@ -49,6 +51,7 @@ function submit() {
                                 </div>
                             </div>
 
+                            <!-- Stok -->
                             <div class="mb-4">
                                 <label
                                     class="block text-sm font-medium text-gray-700"
@@ -58,6 +61,7 @@ function submit() {
                                     v-model="form.stok"
                                     type="number"
                                     min="0"
+                                    required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                                 <div
@@ -68,6 +72,7 @@ function submit() {
                                 </div>
                             </div>
 
+                            <!-- Satuan -->
                             <div class="mb-4">
                                 <label
                                     class="block text-sm font-medium text-gray-700"
@@ -76,6 +81,8 @@ function submit() {
                                 <input
                                     v-model="form.satuan"
                                     type="text"
+                                    maxlength="50"
+                                    required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                                 <div
@@ -86,25 +93,7 @@ function submit() {
                                 </div>
                             </div>
 
-                            <div class="mb-4">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Harga Per Unit</label
-                                >
-                                <input
-                                    v-model="form.harga_per_unit"
-                                    type="number"
-                                    min="0"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                                <div
-                                    v-if="form.errors.harga_per_unit"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.harga_per_unit }}
-                                </div>
-                            </div>
-
+                            <!-- Minimum Stok -->
                             <div class="mb-4">
                                 <label
                                     class="block text-sm font-medium text-gray-700"
@@ -114,6 +103,7 @@ function submit() {
                                     v-model="form.minimum_stok"
                                     type="number"
                                     min="0"
+                                    required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                                 <div
@@ -124,6 +114,7 @@ function submit() {
                                 </div>
                             </div>
 
+                            <!-- Keterangan -->
                             <div class="mb-4">
                                 <label
                                     class="block text-sm font-medium text-gray-700"
@@ -142,12 +133,14 @@ function submit() {
                                 </div>
                             </div>
 
+                            <!-- Buttons -->
                             <div class="flex justify-end">
                                 <Link
                                     :href="route('bahan-baku.index')"
                                     class="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-200 transition"
-                                    >Batal</Link
                                 >
+                                    Batal
+                                </Link>
                                 <button
                                     type="submit"
                                     class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
