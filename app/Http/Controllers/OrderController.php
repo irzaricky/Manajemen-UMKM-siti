@@ -62,6 +62,13 @@ class OrderController extends Controller
     // Method untuk menghapus item dari order
     public function removeFromOrder(Request $request)
     {
+        // If clear_all flag is set, clear entire order session
+        if ($request->has('clear_all')) {
+            session()->forget('order');
+            return back()->with('success', 'Order cancelled successfully');
+        }
+
+        // Existing single item removal logic
         $request->validate([
             'product_id' => 'required|exists:produks,id'
         ]);
