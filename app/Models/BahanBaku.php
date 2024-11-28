@@ -26,15 +26,6 @@ class BahanBaku extends Model
         'minimum_stok' => 'integer'
     ];
 
-
-    // Relasi ke Produk melalui Resep
-    public function produk()
-    {
-        return $this->belongsToMany(Produk::class, 'resep_produk')
-            ->withPivot('jumlah_bahan')
-            ->withTimestamps();
-    }
-
     // Relasi ke Pembelian
     public function pembelian()
     {

@@ -32,28 +32,6 @@ const backRoute = computed(() => {
                 <div
                     class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6"
                 >
-                    <!-- Add back button -->
-                    <div class="mb-6">
-                        <Link
-                            :href="backRoute"
-                            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                        >
-                            <svg
-                                class="w-4 h-4 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                                />
-                            </svg>
-                            Kembali
-                        </Link>
-                    </div>
                     <!-- Header Invoice -->
                     <div class="flex justify-between items-center mb-8">
                         <div>
