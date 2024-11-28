@@ -3,7 +3,7 @@ import GuestFooter from '@/Components/GuestFooter.vue';
 </script>
 
 <template>
-    <nav class="top-0 z-50 border-gray-100 bg-[#101906]">
+    <nav class="top-0 z-50 border-gray-100 bg-[#101916]">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-[80px] justify-between items-center">
                 <div class="text-2xl font-bold text-white">

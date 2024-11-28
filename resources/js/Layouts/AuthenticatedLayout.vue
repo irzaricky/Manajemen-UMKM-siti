@@ -37,7 +37,7 @@ const navigationLinks = [
 <template>
     <div>
         <div class="min-h-screen bg-gray-100">
-            <nav class="top-0 z-50 border-gray-100 bg-[#101906]">
+            <nav class="top-0 z-50 border-gray-100 bg-[#101916]">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="flex h-[80px] justify-between">
                         <div class="flex">

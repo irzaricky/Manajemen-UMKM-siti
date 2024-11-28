@@ -4,7 +4,7 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import debounce from "lodash/debounce";
-import { computed, ref, watch, onMounted } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 const props = defineProps({
     hero: String,
@@ -245,7 +245,7 @@ const cart = computed(() => Object.values(orderItems.value));
                                                 quantities[produk.id] >=
                                                     produk.stok
                                             "
-                                            class="text-white font-bold py-2 px-3 rounded bg-[#648374]"
+                                            class="text-white font-bold py-2 px-3 rounded bg-[#648374] hover:bg-[#355245]"
                                             :class="{
                                                 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed':
                                                     produk.stok === 0 ||
@@ -367,7 +367,7 @@ const cart = computed(() => Object.values(orderItems.value));
                                                 v-if="cart.length > 0"
                                                 @click="processCheckout"
                                             >
-                                                Masukan Pesanan
+                                                Proceed to Checkout
                                             </PrimaryButton>
                                         </div>
                                     </div>
