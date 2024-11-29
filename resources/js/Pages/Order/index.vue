@@ -13,16 +13,31 @@ const props = defineProps({
     cart_session: Object, // Add this prop to receive session data
 });
 
-// Convert products data to reactive ref with temp stock
-const productList = ref(
-    (props.produks?.data || []).map((produk) => ({
-        ...produk,
-        tempStock: produk.stok,
-    }))
-);
+// Add these utility functions
+const saveToLocalStorage = (items) => {
+    localStorage.setItem("orderItems", JSON.stringify(items));
+};
 
-// Order management
-const orderItems = ref({});
+const loadFromLocalStorage = () => {
+    const saved = localStorage.getItem("orderItems");
+    return saved ? JSON.parse(saved) : {};
+};
+
+// Update orderItems ref initialization
+const orderItems = ref(loadFromLocalStorage());
+
+// Update productList to account for localStorage items
+const productList = ref(
+    (props.produks?.data || []).map((produk) => {
+        const savedItem = orderItems.value[produk.id];
+        return {
+            ...produk,
+            tempStock: savedItem
+                ? produk.stok - savedItem.quantity
+                : produk.stok,
+        };
+    })
+);
 
 // Initialize cart from session data on mount
 onMounted(() => {
@@ -60,7 +75,7 @@ const orderTotal = computed(() => {
     }, 0);
 });
 
-// Add to order function
+// Update increment function
 function increment(id) {
     const produk = productList.value.find((p) => p.id === id);
     if (!produk || produk.tempStock <= 0) {
@@ -74,16 +89,16 @@ function increment(id) {
             nama: produk.nama,
             harga: produk.harga,
             quantity: 1,
-            stok: produk.stok,
         };
     } else {
         orderItems.value[id].quantity++;
     }
 
     produk.tempStock--;
+    saveToLocalStorage(orderItems.value);
 }
 
-// Remove from order function
+// Update decrement function
 function decrement(id) {
     const item = orderItems.value[id];
     if (!item || item.quantity <= 0) return;
@@ -95,9 +110,11 @@ function decrement(id) {
     if (item.quantity === 0) {
         delete orderItems.value[id];
     }
+
+    saveToLocalStorage(orderItems.value);
 }
 
-// Process checkout
+// Add cleanup on processCheckout
 function processCheckout() {
     // Kirim cart ke session melalui route order.add
     router.post(
@@ -107,6 +124,7 @@ function processCheckout() {
         },
         {
             onSuccess: () => {
+                localStorage.removeItem("orderItems"); // Clear storage after checkout
                 // Setelah berhasil, redirect ke kasir
                 router.get(route("order.kasir"));
             },
