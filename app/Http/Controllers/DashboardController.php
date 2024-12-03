@@ -54,6 +54,25 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Get sales and purchase data for today
+        $todayData = [
+            'sales' => Transaksi::select(
+                DB::raw('HOUR(tanggal) as hour'),
+                DB::raw('SUM(total_harga) as total')
+            )
+                ->whereDate('tanggal', today())
+                ->groupBy(DB::raw('HOUR(tanggal)'))
+                ->get(),
+            'purchases' => DB::table('pembelian_bahan_baku')
+                ->select(
+                    DB::raw('HOUR(tanggal_pembelian) as hour'),
+                    DB::raw('SUM(total_harga) as total')
+                )
+                ->whereDate('tanggal_pembelian', today())
+                ->groupBy(DB::raw('HOUR(tanggal_pembelian)'))
+                ->get()
+        ];
+
         return Inertia::render('Dashboard', [
             'statistics' => [
                 'totalPenjualanHariIni' => $totalPenjualanHariIni,
@@ -62,6 +81,7 @@ class DashboardController extends Controller
                 'bahanBakuLowStock' => $bahanBakuLowStock,
                 'salesData' => $salesData,
                 'bestSellers' => $bestSellers,
+                'todayData' => $todayData
             ],
             'hero' => 'Dashboard'
         ]);
