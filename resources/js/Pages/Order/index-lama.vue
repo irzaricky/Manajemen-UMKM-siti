@@ -1,37 +1,152 @@
 <script setup>
+import Hero from "@/Components/Hero.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, router } from "@inertiajs/vue3";
-import { ref, computed, onMounted, watch } from "vue";
+import { Head, Link, router } from "@inertiajs/vue3";
 import debounce from "lodash/debounce";
+import { computed, onMounted, ref, watch } from "vue";
 
 const props = defineProps({
-    products: Array,
-    selectedItems: {
-        type: Array,
-        default: () => [],
-    },
+    hero: String,
+    produks: Object,
     filters: Object,
+    cart_session: Object, // Add this prop to receive session data
 });
 
-// Inisialisasi nilai pencarian dari filters
-const search = ref(props.filters.search || "");
+// Add these utility functions
+const saveToLocalStorage = (items) => {
+    localStorage.setItem("orderItems", JSON.stringify(items));
+};
 
-// Konversi array produk menjadi reactive ref dengan stok sementara
-const productList = ref(
-    props.products.map((product) => {
-        const selectedItem = props.selectedItems.find(
-            (item) => item.id === product.id
-        );
+const loadFromLocalStorage = () => {
+    const saved = localStorage.getItem("orderItems");
+    return saved ? JSON.parse(saved) : {};
+};
+
+// Update orderItems ref initialization
+const orderItems = ref(loadFromLocalStorage());
+
+const search = ref(props.filters?.search || "");
+
+// Computed filteredProducts based on search
+const filteredProducts = computed(() => {
+    if (!search.value) return props.produks.data;
+
+    const searchLower = search.value.toLowerCase();
+    return props.produks.data.filter(
+        (product) =>
+            product.nama.toLowerCase().includes(searchLower) ||
+            product.tipe.toLowerCase().includes(searchLower)
+    );
+});
+
+// Update productList to use filteredProducts
+const productList = computed(() => {
+    return filteredProducts.value.map((produk) => {
+        const savedItem = orderItems.value[produk.id];
         return {
-            ...product,
-            tempStock: selectedItem
-                ? product.stok - selectedItem.quantity
-                : product.stok,
+            ...produk,
+            tempStock: savedItem
+                ? produk.stok - savedItem.quantity
+                : produk.stok,
         };
-    })
-);
+    });
+});
 
-// Fungsi pencarian dengan debounce untuk pembaruan langsung
+// Initialize cart from session data on mount
+onMounted(() => {
+    if (props.cart_session) {
+        Object.values(props.cart_session).forEach((item) => {
+            orderItems.value[item.id] = {
+                id: item.id,
+                nama: item.name,
+                harga: item.price,
+                quantity: item.quantity,
+            };
+
+            // Update tempStock
+            const product = productList.value.find((p) => p.id === item.id);
+            if (product) {
+                product.tempStock -= item.quantity;
+            }
+        });
+    }
+});
+
+// Computed property for remaining stock
+const remainingStock = computed(() => {
+    const stockMap = {};
+    productList.value.forEach((produk) => {
+        stockMap[produk.id] = produk.tempStock;
+    });
+    return stockMap;
+});
+
+// Computed for order total
+const orderTotal = computed(() => {
+    return Object.values(orderItems.value).reduce((total, item) => {
+        return total + item.harga * item.quantity;
+    }, 0);
+});
+
+// Update increment function
+function increment(id) {
+    const produk = productList.value.find((p) => p.id === id);
+    if (!produk || produk.tempStock <= 0) {
+        alert("Stok tidak mencukupi");
+        return;
+    }
+
+    if (!orderItems.value[id]) {
+        orderItems.value[id] = {
+            id: produk.id,
+            nama: produk.nama,
+            harga: produk.harga,
+            quantity: 1,
+        };
+    } else {
+        orderItems.value[id].quantity++;
+    }
+
+    produk.tempStock--;
+    saveToLocalStorage(orderItems.value);
+}
+
+// Update decrement function
+function decrement(id) {
+    const item = orderItems.value[id];
+    if (!item || item.quantity <= 0) return;
+
+    const produk = productList.value.find((p) => p.id === id);
+    item.quantity--;
+    produk.tempStock++;
+
+    if (item.quantity === 0) {
+        delete orderItems.value[id];
+    }
+
+    saveToLocalStorage(orderItems.value);
+}
+
+// Add cleanup on processCheckout
+function processCheckout() {
+    // Kirim cart ke session melalui route order.add
+    router.post(
+        route("order.add"),
+        {
+            items: Object.values(orderItems.value),
+        },
+        {
+            onSuccess: () => {
+                localStorage.removeItem("orderItems"); // Clear storage after checkout
+                // Setelah berhasil, redirect ke kasir
+                router.get(route("order.kasir"));
+            },
+        }
+    );
+}
+
+// Debounced search handler for URL updates
 const performSearch = debounce((value) => {
     router.get(
         route("order.index"),
@@ -40,292 +155,254 @@ const performSearch = debounce((value) => {
             preserveState: true,
             preserveScroll: true,
             replace: true,
-            onSuccess: () => {
-                // Perbarui productList ketika pencarian berhasil
-                productList.value = props.products.map((product) => {
-                    const selectedItem = props.selectedItems.find(
-                        (item) => item.id === product.id
-                    );
-                    return {
-                        ...product,
-                        tempStock: selectedItem
-                            ? product.stok - selectedItem.quantity
-                            : product.stok,
-                    };
-                });
-            },
         }
     );
 }, 300);
 
-// Pantau perubahan pencarian dengan efek langsung
+// Watch search input
 watch(search, (value) => {
     performSearch(value);
 });
 
-const orderItems = ref({});
-
-// Inisialisasi orderItems dengan selectedItems jika ada
-onMounted(() => {
-    props.selectedItems.forEach((item) => {
-        orderItems.value[item.id] = {
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            maxStock: item.maxStock,
-        };
+// Computed for quantities (for UI compatibility)
+const quantities = computed(() => {
+    const qty = {};
+    Object.values(orderItems.value).forEach((item) => {
+        qty[item.id] = item.quantity;
     });
+    return qty;
 });
 
-// Properti computed untuk total pesanan
-const orderTotal = computed(() => {
-    return Object.values(orderItems.value).reduce((total, item) => {
-        return total + item.price * item.quantity;
-    }, 0);
-});
-
-// Properti computed untuk total item
-const totalItems = computed(() => {
-    return Object.values(orderItems.value).reduce((total, item) => {
-        return total + item.quantity;
-    }, 0);
-});
-
-// Fungsi untuk menambah item ke pesanan
-function addToOrder(product) {
-    // Periksa apakah penambahan satu item akan melebihi stok
-    const currentQuantity = orderItems.value[product.id]?.quantity || 0;
-    const productInList = productList.value.find((p) => p.id === product.id);
-
-    if (productInList.tempStock <= 0) {
-        alert("Stok produk habis!");
-        return;
-    }
-
-    if (!orderItems.value[product.id]) {
-        orderItems.value[product.id] = {
-            id: product.id,
-            name: product.nama,
-            price: product.harga,
-            quantity: 1,
-            maxStock: product.stok,
-        };
-    } else {
-        orderItems.value[product.id].quantity++;
-    }
-
-    // Kurangi stok sementara
-    productInList.tempStock--;
-}
-
-// Fungsi untuk menghapus item dari pesanan
-function removeFromOrder(productId) {
-    const item = orderItems.value[productId];
-    const productInList = productList.value.find((p) => p.id === productId);
-
-    // Kembalikan stok sementara
-    productInList.tempStock += item.quantity;
-
-    delete orderItems.value[productId];
-}
-
-// Fungsi untuk memperbarui kuantitas
-function updateQuantity(productId, newQuantity) {
-    const item = orderItems.value[productId];
-    const productInList = productList.value.find((p) => p.id === productId);
-
-    // Hitung selisih
-    const difference = newQuantity - item.quantity;
-
-    // Periksa apakah kuantitas baru valid
-    if (productInList.tempStock - difference < 0) {
-        alert("Stok tidak mencukupi!");
-        return;
-    }
-
-    // Perbarui stok sementara
-    productInList.tempStock -= difference;
-
-    // Perbarui kuantitas item
-    item.quantity = newQuantity;
-}
-
-function processOrder() {
-    router.post(route("order.process"), {
-        items: Object.values(orderItems.value),
-    });
-}
+// Computed for cart (for UI compatibility)
+const cart = computed(() => Object.values(orderItems.value));
 </script>
 
 <template>
-    <Head title="Order Menu" />
+    <Head title="Dashboard" />
+
     <AuthenticatedLayout>
+        <Hero :heroTitle="props.hero" />
         <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="flex gap-6">
-                    <!-- Menu List (2/3 width) -->
-                    <div
-                        class="w-2/3 bg-white overflow-hidden shadow-sm sm:rounded-lg p-6"
-                    >
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-bold">Menu</h2>
-                            <!-- Search Input -->
+            <div class="mx-16 sm:px-6 lg:px-8">
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                    <!-- Add search input -->
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-gray-800">
+                                Menu
+                            </h2>
                             <div class="flex items-center">
                                 <input
                                     v-model="search"
                                     type="text"
                                     placeholder="Cari menu..."
-                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#648374] focus:border-[#648374] transition-colors"
                                 />
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div
-                                v-for="product in productList"
-                                :key="product.id"
-                                class="border p-4 rounded-lg cursor-pointer hover:bg-gray-50"
-                                :class="{
-                                    'opacity-50 cursor-not-allowed':
-                                        product.tempStock <= 0,
-                                }"
-                                @click="
-                                    product.tempStock > 0 && addToOrder(product)
-                                "
-                            >
-                                <h3 class="font-bold">{{ product.nama }}</h3>
-                                <p class="text-gray-600">
-                                    Rp {{ product.harga.toLocaleString() }}
-                                </p>
-                                <p
-                                    class="text-sm"
-                                    :class="
-                                        product.tempStock <= 3
-                                            ? 'text-red-500'
-                                            : 'text-gray-500'
-                                    "
-                                >
-                                    Stok: {{ product.tempStock }}
-                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Order Preview (1/3 width) -->
-                    <div
-                        class="w-1/3 bg-white overflow-hidden shadow-sm sm:rounded-lg p-6"
-                    >
-                        <h2 class="text-xl font-bold mb-4">Order Preview</h2>
-                        <div
-                            v-if="Object.keys(orderItems).length === 0"
-                            class="text-gray-500"
-                        >
-                            Belum ada item yang dipilih
-                        </div>
-                        <div v-else>
-                            <!-- Order Items -->
+                    <div class="flex gap-6 p-6">
+                        <div class="flex flex-col w-2/3">
                             <div
-                                v-for="item in orderItems"
-                                :key="item.id"
-                                class="flex flex-col mb-4 pb-4 border-b"
+                                class="grid grid-cols sm:grid-cols-2 lg:grid-cols-3 gap-6"
                             >
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <p class="font-medium">
-                                            {{ item.name }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            @ Rp
-                                            {{ item.price.toLocaleString() }}
-                                        </p>
-                                    </div>
-                                    <button
-                                        @click="removeFromOrder(item.id)"
-                                        class="text-red-500 hover:text-red-700"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            class="h-5 w-5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12"
-                                            />
-                                        </svg>
-                                    </button>
+                                <div
+                                    v-if="!productList.length"
+                                    class="col-span-full flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg"
+                                >
+                                    <p class="text-gray-500 text-lg">
+                                        Tidak ada menu yang ditemukan
+                                    </p>
+                                    <p class="text-gray-400">
+                                        Coba kata kunci pencarian lain
+                                    </p>
                                 </div>
-
-                                <!-- Quantity Controls -->
-                                <div class="flex items-center mt-2">
-                                    <button
-                                        @click="
-                                            updateQuantity(
-                                                item.id,
-                                                Math.max(1, item.quantity - 1)
-                                            )
-                                        "
-                                        class="px-2 py-1 bg-gray-200 rounded-l hover:bg-gray-300 transition"
+                                <div
+                                    v-else
+                                    v-for="produk in productList"
+                                    :key="produk.id"
+                                    class="bg-white shadow rounded-lg p-4"
+                                >
+                                    <img
+                                        loading="lazy"
+                                        src="../../../../public/dummy.png"
+                                        alt="Menu Image"
+                                        class="rounded-lg"
+                                    />
+                                    <div
+                                        class="text-xl font-bold py-2 text-gray-700"
                                     >
-                                        -
-                                    </button>
-                                    <span class="px-4 py-1 bg-gray-100">{{
-                                        item.quantity
-                                    }}</span>
-                                    <button
-                                        @click="
-                                            updateQuantity(
-                                                item.id,
-                                                Math.min(
-                                                    item.maxStock,
-                                                    item.quantity + 1
-                                                )
-                                            )
-                                        "
-                                        class="px-2 py-1 bg-gray-200 rounded-r hover:bg-gray-300 transition"
+                                        {{ produk.nama }}
+                                    </div>
+                                    <div class="text-base text-gray-700">
+                                        Rp {{ produk.harga.toLocaleString() }}
+                                    </div>
+                                    <!-- Add remaining stock display -->
+                                    <div
+                                        class="text-sm mt-1"
+                                        :class="{
+                                            'text-red-600':
+                                                remainingStock[produk.id] <= 5,
+                                            'text-yellow-600':
+                                                remainingStock[produk.id] > 5 &&
+                                                remainingStock[produk.id] <= 10,
+                                            'text-green-600':
+                                                remainingStock[produk.id] > 10,
+                                        }"
                                     >
-                                        +
-                                    </button>
-                                    <span class="ml-2 text-sm text-gray-500">
-                                        Subtotal: Rp
-                                        {{
-                                            (
-                                                item.price * item.quantity
-                                            ).toLocaleString()
-                                        }}
-                                    </span>
+                                        Stok tersisa:
+                                        {{ remainingStock[produk.id] }}
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-start gap-x-4 mt-4"
+                                    >
+                                        <button
+                                            @click="decrement(produk.id)"
+                                            :disabled="
+                                                quantities[produk.id] === 0
+                                            "
+                                            class="text-white font-bold py-2 px-3 rounded bg-red-500 hover:bg-red-700"
+                                        >
+                                            -
+                                        </button>
+                                        <span class="text-lg font-semibold">{{
+                                            quantities[produk.id] || 0
+                                        }}</span>
+                                        <button
+                                            @click="increment(produk.id)"
+                                            :disabled="
+                                                produk.stok === 0 ||
+                                                quantities[produk.id] >=
+                                                    produk.stok
+                                            "
+                                            class="text-white font-bold py-2 px-3 rounded bg-[#648374] hover:bg-[#355245]"
+                                            :class="{
+                                                'bg-gray-400 hover:bg-gray-500 cursor-not-allowed':
+                                                    produk.stok === 0 ||
+                                                    quantities[produk.id] >=
+                                                        produk.stok,
+                                                'bg-[#648374] hover:bg-[#355245]':
+                                                    produk.stok > 0 &&
+                                                    quantities[produk.id] <
+                                                        produk.stok,
+                                            }"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
-                            <!-- Order Summary -->
-                            <div class="border-t mt-4 pt-4">
-                                <div
-                                    class="flex justify-between text-sm text-gray-600 mb-2"
+                            <nav aria-label="Page navigation">
+                                <ul
+                                    class="flex mt-6 gap-5 justify-center items-center font-bold text-gray-500"
                                 >
-                                    <span>Total Items:</span>
-                                    <span>{{ totalItems }}</span>
+                                    <li v-if="props.produks.prev_page_url">
+                                        <Link
+                                            :href="props.produks.prev_page_url"
+                                            class="rounded-md transform transition-transform duration-100 hover:scale-105 hover:text-black text-xl"
+                                        >
+                                            &lt; Prev
+                                        </Link>
+                                    </li>
+                                    <li v-if="props.produks.next_page_url">
+                                        <Link
+                                            :href="props.produks.next_page_url"
+                                            class="rounded-md transform transition-transform duration-100 hover:scale-105 hover:text-black text-xl"
+                                        >
+                                            Next &gt;
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                        <div class="w-1/3 sticky top-4">
+                            <div class="bg-white shadow-lg rounded-lg p-6">
+                                <h1
+                                    class="font-bold text-3xl text-center justify-center"
+                                >
+                                    Preview Pesanan
+                                </h1>
+                                <hr
+                                    data-layername="pembatas preview pesanan"
+                                    class="md:mt-4 mt-3 w-full border border-solid bg-zinc-500 border-zinc-500 min-h-[2px] opacity-[0.32]"
+                                    aria-hidden="true"
+                                />
+                                <div class="bg-gray-200 mt-4 rounded-lg">
+                                    <div class="p-4">
+                                        <div
+                                            v-for="item in cart"
+                                            :key="item.id"
+                                            class="flex items-center justify-between border-b py-2"
+                                        >
+                                            <div>
+                                                <p
+                                                    class="text-sm font-semibold"
+                                                >
+                                                    {{ item.nama }}
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-600"
+                                                >
+                                                    Rp
+                                                    {{
+                                                        item.harga.toLocaleString()
+                                                    }}
+                                                    x {{ item.quantity }}
+                                                </p>
+                                            </div>
+                                            <p class="text-sm font-bold">
+                                                Rp
+                                                {{
+                                                    (
+                                                        item.harga *
+                                                        item.quantity
+                                                    ).toLocaleString()
+                                                }}
+                                            </p>
+                                        </div>
+                                        <hr
+                                            data-layername="pembatas preview pesanan"
+                                            class="md:mt-4 mt-3 w-full border border-solid bg-zinc-500 border-zinc-500 min-h-[2px] opacity-[0.32]"
+                                            aria-hidden="true"
+                                        />
+                                        <div
+                                            class="flex justify-between border-t pt-2"
+                                        >
+                                            <p
+                                                class="text-lg font-semibold text-right"
+                                            >
+                                                Total:
+                                            </p>
+                                            <p
+                                                class="text-lg font-semibold text-right"
+                                            >
+                                                Rp
+                                                {{
+                                                    cart
+                                                        .reduce(
+                                                            (total, item) =>
+                                                                total +
+                                                                item.harga *
+                                                                    item.quantity,
+                                                            0
+                                                        )
+                                                        .toLocaleString()
+                                                }}
+                                            </p>
+                                        </div>
+                                        <div
+                                            class="mt-4 flex items-center justify-center"
+                                        >
+                                            <PrimaryButton
+                                                v-if="cart.length > 0"
+                                                @click="processCheckout"
+                                            >
+                                                Proceed to Checkout
+                                            </PrimaryButton>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div
-                                    class="flex justify-between font-bold text-lg"
-                                >
-                                    <span>Total:</span>
-                                    <span
-                                        >Rp
-                                        {{ orderTotal.toLocaleString() }}</span
-                                    >
-                                </div>
-                                <button
-                                    @click="processOrder"
-                                    class="w-full mt-4 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
-                                    :disabled="totalItems === 0"
-                                >
-                                    Proses Order
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -334,3 +411,10 @@ function processOrder() {
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style>
+.sticky {
+    position: sticky;
+    height: fit-content;
+}
+</style>

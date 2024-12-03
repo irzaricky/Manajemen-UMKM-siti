@@ -17,19 +17,24 @@ onMounted(() => {
     // Today's Sales and Purchases Chart
     const ctx = document.getElementById("todayChart").getContext("2d");
 
-    // Prepare data
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    const salesData = new Array(24).fill(0);
-    const purchasesData = new Array(24).fill(0);
+    // Prepare data - Only hours from 10 to 16 (10 AM to 4 PM)
+    const hours = Array.from({ length: 7 }, (_, i) => i + 10); // Start from 10, length 7
+    const salesData = new Array(7).fill(0);
+    const purchasesData = new Array(7).fill(0);
 
     // Fill in sales data
     props.statistics.todayData.sales.forEach((item) => {
-        salesData[item.hour] = item.total;
+        if (item.hour >= 10 && item.hour <= 16) {
+            // Only include data within our time range
+            salesData[item.hour - 10] = item.total; // Adjust index by subtracting offset
+        }
     });
 
     // Fill in purchases data
     props.statistics.todayData.purchases.forEach((item) => {
-        purchasesData[item.hour] = item.total;
+        if (item.hour >= 10 && item.hour <= 16) {
+            purchasesData[item.hour - 10] = item.total;
+        }
     });
 
     new Chart(ctx, {
@@ -167,14 +172,6 @@ onMounted(() => {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Weekly Sales Chart -->
-                <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <h2 class="text-xl font-semibold mb-4">
-                        Penjualan 7 Hari Terakhir
-                    </h2>
-                    <canvas id="weeklyChart"></canvas>
                 </div>
 
                 <!-- Best Sellers -->

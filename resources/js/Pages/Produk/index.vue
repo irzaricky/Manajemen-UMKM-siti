@@ -1,4 +1,5 @@
 <script setup>
+import Hero from "@/Components/Hero.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import { computed, ref, watch } from "vue";
@@ -6,6 +7,7 @@ import { Inertia } from "@inertiajs/inertia";
 import debounce from "lodash/debounce";
 
 const props = defineProps({
+    hero: String,
     produks: Object,
     filters: Object,
 });
@@ -30,6 +32,19 @@ const performSearch = debounce((value) => {
 watch(search, (value) => {
     performSearch(value);
 });
+
+// Stock threshold constants
+const LOW_STOCK_THRESHOLD = 3;
+const MEDIUM_STOCK_THRESHOLD = 6;
+
+function getStockClass(stok) {
+    if (stok <= LOW_STOCK_THRESHOLD) {
+        return "text-red-600 font-semibold";
+    } else if (stok <= MEDIUM_STOCK_THRESHOLD) {
+        return "text-yellow-600";
+    }
+    return "text-green-600";
+}
 
 function deleteProduct(produk) {
     if (confirm(`Apakah Anda yakin ingin menghapus produk "${produk.nama}"?`)) {
@@ -171,8 +186,20 @@ function deleteProduct(produk) {
                                     <td class="px-4 py-2 text-sm text-gray-700">
                                         Rp {{ produk.harga.toLocaleString() }}
                                     </td>
-                                    <td class="px-4 py-2 text-sm text-gray-700">
+                                    <td
+                                        class="px-4 py-2 text-sm"
+                                        :class="getStockClass(produk.stok)"
+                                    >
                                         {{ produk.stok }}
+                                        <span
+                                            v-if="
+                                                produk.stok <=
+                                                LOW_STOCK_THRESHOLD
+                                            "
+                                            class="text-xs ml-1"
+                                        >
+                                            (Stok Menipis!)
+                                        </span>
                                     </td>
                                     <td
                                         class="py-2 text-sm text-white flex justify-center gap-x-4"

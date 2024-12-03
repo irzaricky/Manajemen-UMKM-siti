@@ -23,7 +23,7 @@ class DashboardController extends Controller
             ->count();
 
         // Get products low in stock
-        $productLowStock = Produk::where('stok', '<=', 10)
+        $productLowStock = Produk::where('stok', '<=', 5)
             ->get();
 
         // Get bahan baku low in stock

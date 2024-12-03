@@ -212,10 +212,9 @@ const cart = computed(() => Object.values(orderItems.value));
                                     class="bg-white shadow rounded-lg p-4"
                                 >
                                     <img
-                                        v-if="produk.gambar"
-                                        :src="`/storage/${produk.gambar}`"
-                                        :alt="produk.nama"
                                         loading="lazy"
+                                        src="../../../../public/dummy.png"
+                                        alt="Menu Image"
                                         class="rounded-lg"
                                     />
                                     <div
