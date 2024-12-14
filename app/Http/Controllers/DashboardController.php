@@ -52,6 +52,22 @@ class DashboardController extends Controller
             DB::raw('COUNT(DISTINCT transaksi.id) as total_transaksi')
         ])->first();
 
+        // Add to the index method
+        $statistics = [
+            'dates' => [],
+            'daily_revenue' => [],
+            'daily_transactions' => []
+        ];
+
+        // Get data for the selected date range
+        $query->select([
+            'transaksi.tanggal',
+            DB::raw('SUM(detail_transaksi.jumlah * detail_transaksi.harga_satuan) as revenue'),
+            DB::raw('COUNT(DISTINCT transaksi.id) as transactions')
+        ])
+            ->groupBy('transaksi.tanggal')
+            ->orderBy('transaksi.tanggal');
+
         // Get best selling products
         $bestSellers = (clone $query)
             ->select([
