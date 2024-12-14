@@ -32,26 +32,16 @@ ChartJS.register(
 const props = defineProps({
     hero: String,
     statistics: Object,
-    currentPeriod: String,
     filters: Object,
-    bestSellers: {
-        type: Array,
-        default: () => [],
-    },
-    lowStockProducts: {
-        type: Array,
-        default: () => [],
-    },
-    lowStockMaterials: {
-        type: Array,
-        default: () => [],
-    },
+    bestSellers: Array,
+    lowStockProducts: Array,
+    lowStockMaterials: Array,
 });
 
-// Filter states
+// Initialize with default dates if not provided
 const dateRange = ref({
-    start: props.filters?.startDate || "",
-    end: props.filters?.endDate || "",
+    start: props.filters?.startDate || new Date().toISOString().substr(0, 10),
+    end: props.filters?.endDate || new Date().toISOString().substr(0, 10),
 });
 
 // Helper function for currency formatting
@@ -62,28 +52,46 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-// Debounced filter function
-const applyFilters = debounce(() => {
-    router.get(
-        route("dashboard"),
-        {
-            period: props.currentPeriod,
-            startDate: dateRange.value.start,
-            endDate: dateRange.value.end,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-        }
-    );
-}, 300);
-
-// Watch for filter changes
-watch(dateRange, () => {
-    applyFilters();
-});
+// Watch for date range changes
+watch(
+    dateRange,
+    () => {
+        router.get(
+            route("dashboard"),
+            {
+                startDate: dateRange.value.start,
+                endDate: dateRange.value.end,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ["statistics", "bestSellers"],
+            }
+        );
+    },
+    { deep: true }
+);
 
 // Add computed properties for chart data
+const chartOptions = {
+    responsive: true,
+    scales: {
+        y: {
+            beginAtZero: true,
+        },
+    },
+    plugins: {
+        legend: {
+            position: "top",
+        },
+    },
+};
+
+const formatHour = (hour) => {
+    if (!hour && hour !== 0) return "-";
+    return `${hour.toString().padStart(2, "0")}:00`;
+};
+
 const salesChartData = computed(() => ({
     labels: props.statistics.dates || [],
     datasets: [
@@ -91,6 +99,7 @@ const salesChartData = computed(() => ({
             label: "Pendapatan Harian",
             data: props.statistics.daily_revenue || [],
             borderColor: "#4F46E5",
+            backgroundColor: "#4F46E5",
             tension: 0.1,
         },
     ],
@@ -103,6 +112,7 @@ const transactionChartData = computed(() => ({
             label: "Jumlah Transaksi",
             data: props.statistics.daily_transactions || [],
             borderColor: "#10B981",
+            backgroundColor: "#10B981",
             tension: 0.1,
         },
     ],
@@ -117,14 +127,14 @@ const transactionChartData = computed(() => ({
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Filter Section -->
+                <!-- Date Range Picker -->
                 <div class="bg-white p-4 rounded-lg shadow mb-6">
                     <div class="flex gap-4 items-end">
                         <div class="flex-1">
                             <label
                                 class="block text-sm font-medium text-gray-700 mb-1"
                             >
-                                Start Date
+                                Tanggal Mulai
                             </label>
                             <input
                                 type="date"
@@ -137,7 +147,7 @@ const transactionChartData = computed(() => ({
                             <label
                                 class="block text-sm font-medium text-gray-700 mb-1"
                             >
-                                End Date
+                                Tanggal Akhir
                             </label>
                             <input
                                 type="date"
@@ -148,10 +158,7 @@ const transactionChartData = computed(() => ({
                     </div>
                 </div>
 
-                <SalesStatistics
-                    :statistics="statistics"
-                    :currentPeriod="currentPeriod"
-                />
+                <SalesStatistics :statistics="statistics" />
 
                 <!-- Add after the existing statistics section -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -160,10 +167,7 @@ const transactionChartData = computed(() => ({
                         <h3 class="text-lg font-semibold mb-4">
                             Grafik Pendapatan
                         </h3>
-                        <Line
-                            :data="salesChartData"
-                            :options="{ responsive: true }"
-                        />
+                        <Line :data="salesChartData" :options="chartOptions" />
                     </div>
 
                     <!-- Transaction Chart -->
@@ -173,8 +177,23 @@ const transactionChartData = computed(() => ({
                         </h3>
                         <Line
                             :data="transactionChartData"
-                            :options="{ responsive: true }"
+                            :options="chartOptions"
                         />
+                    </div>
+                </div>
+
+                <!-- Peak Hours Section -->
+                <div class="mt-6 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">
+                        Jam Penjualan Tertinggi
+                    </h3>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-indigo-600">
+                            {{ formatHour(statistics.peak_hour) }}
+                        </p>
+                        <p class="text-gray-600 mt-2">
+                            {{ statistics.peak_transactions }} Transaksi
+                        </p>
                     </div>
                 </div>
 

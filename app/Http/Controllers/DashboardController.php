@@ -14,59 +14,45 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $period = $request->get('period', 'daily');
-        $startDate = $request->get('startDate');
-        $endDate = $request->get('endDate');
+        $startDate = $request->startDate ?? Carbon::now()->subDays(30)->format('Y-m-d');
+        $endDate = $request->endDate ?? Carbon::now()->format('Y-m-d');
 
         // Base query for transactions
         $query = DB::table('transaksi')
             ->join('detail_transaksi', 'transaksi.id', '=', 'detail_transaksi.transaksi_id')
-            ->join('produks', 'detail_transaksi.produk_id', '=', 'produks.id');
+            ->join('produks', 'detail_transaksi.produk_id', '=', 'produks.id')
+            ->whereBetween('transaksi.tanggal', [$startDate, $endDate]);
 
-        // Apply date filters if provided
-        if ($startDate && $endDate) {
-            $query->whereBetween('transaksi.tanggal', [$startDate, $endDate]);
-        } else {
-            switch ($period) {
-                case 'weekly':
-                    $query->whereBetween('transaksi.tanggal', [
-                        Carbon::now()->startOfWeek(),
-                        Carbon::now()->endOfWeek()
-                    ]);
-                    break;
-                case 'monthly':
-                    $query->whereBetween('transaksi.tanggal', [
-                        Carbon::now()->startOfMonth(),
-                        Carbon::now()->endOfMonth()
-                    ]);
-                    break;
-                default: // daily
-                    $query->whereDate('transaksi.tanggal', Carbon::today());
-                    break;
-            }
-        }
-
-        // Get sales statistics
-        $statistics = $query->select([
-            DB::raw('SUM(detail_transaksi.jumlah * detail_transaksi.harga_satuan) as total_pendapatan'),
-            DB::raw('COUNT(DISTINCT transaksi.id) as total_transaksi')
-        ])->first();
-
-        // Add to the index method
-        $statistics = [
-            'dates' => [],
-            'daily_revenue' => [],
-            'daily_transactions' => []
-        ];
-
-        // Get data for the selected date range
-        $query->select([
-            'transaksi.tanggal',
-            DB::raw('SUM(detail_transaksi.jumlah * detail_transaksi.harga_satuan) as revenue'),
-            DB::raw('COUNT(DISTINCT transaksi.id) as transactions')
-        ])
+        // Get chart data
+        $chartData = (clone $query)
+            ->select([
+                'transaksi.tanggal',
+                DB::raw('SUM(detail_transaksi.jumlah * detail_transaksi.harga_satuan) as revenue'),
+                DB::raw('COUNT(DISTINCT transaksi.id) as transactions')
+            ])
             ->groupBy('transaksi.tanggal')
-            ->orderBy('transaksi.tanggal');
+            ->orderBy('transaksi.tanggal')
+            ->get();
+
+        // Get peak hours
+        $peakHours = (clone $query)
+            ->select([
+                DB::raw('HOUR(transaksi.created_at) as hour'),
+                DB::raw('COUNT(*) as transaction_count')
+            ])
+            ->groupBy(DB::raw('HOUR(transaksi.created_at)'))
+            ->orderByDesc('transaction_count')
+            ->first();
+
+        $statistics = [
+            'dates' => $chartData->pluck('tanggal')->map(fn($date) => Carbon::parse($date)->format('Y-m-d')),
+            'daily_revenue' => $chartData->pluck('revenue'),
+            'daily_transactions' => $chartData->pluck('transactions'),
+            'total_pendapatan' => $chartData->sum('revenue'),
+            'total_transaksi' => $chartData->sum('transactions'),
+            'peak_hour' => $peakHours ? $peakHours->hour : null,
+            'peak_transactions' => $peakHours ? $peakHours->transaction_count : 0
+        ];
 
         // Get best selling products
         $bestSellers = (clone $query)
@@ -98,8 +84,10 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'hero' => 'Dashboard',
             'statistics' => $statistics,
-            'currentPeriod' => $period,
-            'filters' => $request->only(['startDate', 'endDate']),
+            'filters' => [
+                'startDate' => $startDate,
+                'endDate' => $endDate
+            ],
             'bestSellers' => $bestSellers,
             'lowStockProducts' => $lowStockProducts,
             'lowStockMaterials' => $lowStockMaterials
