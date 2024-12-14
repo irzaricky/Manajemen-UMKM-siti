@@ -10,12 +10,13 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('produks', function (Blueprint $table) {  // Changed to plural
+        Schema::create('produks', function (Blueprint $table) {
             $table->id();
             $table->string('tipe');
             $table->string('nama');
             $table->decimal('harga', 10, 2);
             $table->integer('stok')->default(0);
+            $table->integer('minimum_stok')->default(3);
             $table->string("gambar")->nullable();
             $table->timestamps();
         });
@@ -26,6 +27,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('produks');  // Changed to plural
+        Schema::dropIfExists('produks');
     }
 };

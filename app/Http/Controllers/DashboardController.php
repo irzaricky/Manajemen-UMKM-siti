@@ -2,88 +2,91 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Produk;
 use App\Models\Transaksi;
-use App\Models\TransaksiDetail;
+use App\Models\Produk;
 use App\Models\BahanBaku;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use DB;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Get total sales today
-        $totalPenjualanHariIni = Transaksi::whereDate('tanggal', today())
-            ->sum('total_harga');
+        $period = $request->get('period', 'daily');
+        $startDate = $request->get('startDate');
+        $endDate = $request->get('endDate');
 
-        // Get total transactions today
-        $totalTransaksiHariIni = Transaksi::whereDate('tanggal', today())
-            ->count();
+        // Base query for transactions
+        $query = DB::table('transaksi')
+            ->join('detail_transaksi', 'transaksi.id', '=', 'detail_transaksi.transaksi_id')
+            ->join('produks', 'detail_transaksi.produk_id', '=', 'produks.id');
 
-        // Get products low in stock
-        $productLowStock = Produk::where('stok', '<=', 5)
-            ->get();
+        // Apply date filters if provided
+        if ($startDate && $endDate) {
+            $query->whereBetween('transaksi.tanggal', [$startDate, $endDate]);
+        } else {
+            switch ($period) {
+                case 'weekly':
+                    $query->whereBetween('transaksi.tanggal', [
+                        Carbon::now()->startOfWeek(),
+                        Carbon::now()->endOfWeek()
+                    ]);
+                    break;
+                case 'monthly':
+                    $query->whereBetween('transaksi.tanggal', [
+                        Carbon::now()->startOfMonth(),
+                        Carbon::now()->endOfMonth()
+                    ]);
+                    break;
+                default: // daily
+                    $query->whereDate('transaksi.tanggal', Carbon::today());
+                    break;
+            }
+        }
 
-        // Get bahan baku low in stock
-        $bahanBakuLowStock = BahanBaku::where('stok', '<=', DB::raw('minimum_stok'))
-            ->get();
-
-        // Get sales data for last 7 days
-        $salesData = Transaksi::select(
-            DB::raw('DATE(tanggal) as date'),
-            DB::raw('SUM(total_harga) as total_sales'),
-            DB::raw('COUNT(*) as transaction_count')
-        )
-            ->whereDate('tanggal', '>=', now()->subDays(7))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        // Get sales statistics
+        $statistics = $query->select([
+            DB::raw('SUM(detail_transaksi.jumlah * detail_transaksi.harga_satuan) as total_pendapatan'),
+            DB::raw('COUNT(DISTINCT transaksi.id) as total_transaksi')
+        ])->first();
 
         // Get best selling products
-        $bestSellers = TransaksiDetail::select(
-            'produk_id',
-            'produks.nama',
-            DB::raw('SUM(jumlah) as total_sold'),
-            DB::raw('SUM(jumlah * harga_satuan) as total_revenue')
-        )
-            ->join('produks', 'produk_id', '=', 'produks.id')
-            ->groupBy('produk_id', 'produks.nama')
-            ->orderByDesc('total_sold')
+        $bestSellers = (clone $query)
+            ->select([
+                'produks.id',
+                'produks.nama',
+                'produks.tipe',
+                DB::raw('SUM(detail_transaksi.jumlah) as total_terjual'),
+                DB::raw('SUM(detail_transaksi.jumlah * detail_transaksi.harga_satuan) as total_pendapatan')
+            ])
+            ->groupBy('produks.id', 'produks.nama', 'produks.tipe')
+            ->orderByDesc('total_terjual')
             ->limit(5)
             ->get();
 
-        // Get sales and purchase data for today
-        $todayData = [
-            'sales' => Transaksi::select(
-                DB::raw('HOUR(tanggal) as hour'),
-                DB::raw('SUM(total_harga) as total')
-            )
-                ->whereDate('tanggal', today())
-                ->groupBy(DB::raw('HOUR(tanggal)'))
-                ->get(),
-            'purchases' => DB::table('pembelian_bahan_baku')
-                ->select(
-                    DB::raw('HOUR(tanggal_pembelian) as hour'),
-                    DB::raw('SUM(total_harga) as total')
-                )
-                ->whereDate('tanggal_pembelian', today())
-                ->groupBy(DB::raw('HOUR(tanggal_pembelian)'))
-                ->get()
-        ];
+        // Get low stock products (independent of time filter)
+        $lowStockProducts = Produk::select(['id', 'nama', 'stok', 'tipe'])
+            ->whereRaw('stok <= COALESCE(minimum_stok, 5)')
+            ->orderBy('stok')
+            ->limit(5)
+            ->get();
+
+        // Get low stock raw materials (independent of time filter)
+        $lowStockMaterials = BahanBaku::select(['id', 'nama', 'stok', 'satuan', 'minimum_stok'])
+            ->whereColumn('stok', '<=', 'minimum_stok')
+            ->orderBy('stok')
+            ->get();
 
         return Inertia::render('Dashboard', [
-            'statistics' => [
-                'totalPenjualanHariIni' => $totalPenjualanHariIni,
-                'totalTransaksiHariIni' => $totalTransaksiHariIni,
-                'productLowStock' => $productLowStock,
-                'bahanBakuLowStock' => $bahanBakuLowStock,
-                'salesData' => $salesData,
-                'bestSellers' => $bestSellers,
-                'todayData' => $todayData
-            ],
-            'hero' => 'Dashboard'
+            'hero' => 'Dashboard',
+            'statistics' => $statistics,
+            'currentPeriod' => $period,
+            'filters' => $request->only(['startDate', 'endDate']),
+            'bestSellers' => $bestSellers,
+            'lowStockProducts' => $lowStockProducts,
+            'lowStockMaterials' => $lowStockMaterials
         ]);
     }
 }
