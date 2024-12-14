@@ -1,38 +1,23 @@
 <script setup>
+import Hero from "@/Components/Hero.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link, router } from "@inertiajs/vue3";
-import { computed, ref, watch } from "vue";
 import { Inertia } from "@inertiajs/inertia";
-import debounce from "lodash/debounce";
+import { Head, Link } from "@inertiajs/vue3";
+import { computed } from "vue";
 
+// Props dari server
 const props = defineProps({
-    produks: Object,
-    filters: Object,
+    hero: String,
+    produks: Object, // Objek dari paginasi produk
 });
 
+// Daftar produk dari props paginasi
 const produkList = computed(() => props.produks.data);
-const search = ref(props.filters.search);
 
-// Debounced search function
-const performSearch = debounce((value) => {
-    router.get(
-        route("dashboard.produk.index"),
-        { search: value },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        }
-    );
-}, 300);
-
-// Watch for search input changes
-watch(search, (value) => {
-    performSearch(value);
-});
-
+// Fungsi untuk menghapus produk dengan konfirmasi
 function deleteProduct(produk) {
     if (confirm(`Apakah Anda yakin ingin menghapus produk "${produk.nama}"?`)) {
+        // Memanggil Inertia untuk menghapus produk
         Inertia.delete(route("dashboard.produk.delete", produk.id));
     }
 }
@@ -42,23 +27,12 @@ function deleteProduct(produk) {
     <Head title="Produk" />
 
     <AuthenticatedLayout>
+        <Hero :heroTitle="hero" />
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-semibold">List Produk</h3>
-
-                            <!-- Search Input -->
-                            <div class="flex items-center">
-                                <input
-                                    v-model="search"
-                                    type="text"
-                                    placeholder="Cari produk..."
-                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-
+                        <div class="flex justify-end pb-4">
                             <!-- Navigasi Paginasi -->
                             <nav aria-label="Page navigation">
                                 <ul class="flex space-x-2">
@@ -66,10 +40,6 @@ function deleteProduct(produk) {
                                         <Link
                                             :href="props.produks.prev_page_url"
                                             class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-200 transition"
-                                            :class="{
-                                                'opacity-50 cursor-not-allowed':
-                                                    !produks.prev_page_url,
-                                            }"
                                         >
                                             Previous
                                         </Link>
@@ -78,10 +48,6 @@ function deleteProduct(produk) {
                                         <Link
                                             :href="props.produks.next_page_url"
                                             class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-200 transition"
-                                            :class="{
-                                                'opacity-50 cursor-not-allowed':
-                                                    !produks.next_page_url,
-                                            }"
                                         >
                                             Next
                                         </Link>
@@ -100,11 +66,6 @@ function deleteProduct(produk) {
                                         class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
                                     >
                                         ID
-                                    </th>
-                                    <th
-                                        class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
-                                    >
-                                        Gambar
                                     </th>
                                     <th
                                         class="px-4 py-2 text-left text-sm font-semibold text-gray-600"
@@ -141,27 +102,6 @@ function deleteProduct(produk) {
                                     <td class="px-4 py-2 text-sm text-gray-700">
                                         {{ produk.id }}
                                     </td>
-                                    <td class="px-4 py-2">
-                                        <div
-                                            class="h-16 w-16 overflow-hidden rounded-lg"
-                                        >
-                                            <img
-                                                v-if="produk.gambar"
-                                                :src="`/storage/${produk.gambar}`"
-                                                :alt="produk.nama"
-                                                class="h-full w-full object-cover"
-                                            />
-                                            <div
-                                                v-else
-                                                class="flex h-full w-full items-center justify-center bg-gray-100"
-                                            >
-                                                <span
-                                                    class="text-xs text-gray-400"
-                                                    >No Image</span
-                                                >
-                                            </div>
-                                        </div>
-                                    </td>
                                     <td class="px-4 py-2 text-sm text-gray-700">
                                         {{ produk.nama }}
                                     </td>
@@ -186,7 +126,7 @@ function deleteProduct(produk) {
                                                     )
                                                 )
                                             "
-                                            class="font-bold py-2 px-4 rounded bg-blue-600 hover:bg-blue-700"
+                                            class="font-bold py-2 px-4 rounded bg-slate-500 hover:bg-slate-700"
                                         >
                                             Edit
                                         </Button>

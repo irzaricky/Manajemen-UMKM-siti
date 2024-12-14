@@ -1,9 +1,11 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
+import { computed } from "vue";
 
 const props = defineProps({
     transaction: Object,
+    source: String,
 });
 
 // Format tanggal
@@ -13,6 +15,13 @@ const formatDate = (date) => {
         timeStyle: "short",
     });
 };
+
+// Compute back route based on source
+const backRoute = computed(() => {
+    return props.source === "order"
+        ? route("order.index")
+        : route("laporan.detail", { date: props.transaction.tanggal });
+});
 </script>
 
 <template>
@@ -133,12 +142,6 @@ const formatDate = (date) => {
                             >
                                 New Order
                             </Link>
-                            <button
-                                @click="window.print()"
-                                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                            >
-                                Print Invoice
-                            </button>
                         </div>
                     </div>
                 </div>

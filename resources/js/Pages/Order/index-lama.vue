@@ -26,9 +26,23 @@ const loadFromLocalStorage = () => {
 // Update orderItems ref initialization
 const orderItems = ref(loadFromLocalStorage());
 
-// Update productList to account for localStorage items
-const productList = ref(
-    (props.produks?.data || []).map((produk) => {
+const search = ref(props.filters?.search || "");
+
+// Computed filteredProducts based on search
+const filteredProducts = computed(() => {
+    if (!search.value) return props.produks.data;
+
+    const searchLower = search.value.toLowerCase();
+    return props.produks.data.filter(
+        (product) =>
+            product.nama.toLowerCase().includes(searchLower) ||
+            product.tipe.toLowerCase().includes(searchLower)
+    );
+});
+
+// Update productList to use filteredProducts
+const productList = computed(() => {
+    return filteredProducts.value.map((produk) => {
         const savedItem = orderItems.value[produk.id];
         return {
             ...produk,
@@ -36,8 +50,8 @@ const productList = ref(
                 ? produk.stok - savedItem.quantity
                 : produk.stok,
         };
-    })
-);
+    });
+});
 
 // Initialize cart from session data on mount
 onMounted(() => {
@@ -132,9 +146,7 @@ function processCheckout() {
     );
 }
 
-// Search functionality
-const search = ref(props.filters?.search || "");
-
+// Debounced search handler for URL updates
 const performSearch = debounce((value) => {
     router.get(
         route("order.index"),
@@ -147,6 +159,7 @@ const performSearch = debounce((value) => {
     );
 }, 300);
 
+// Watch search input
 watch(search, (value) => {
     performSearch(value);
 });
@@ -400,7 +413,6 @@ const cart = computed(() => Object.values(orderItems.value));
 </template>
 
 <style>
-/* Tambahkan CSS untuk memastikan layout tetap stabil */
 .sticky {
     position: sticky;
     height: fit-content;

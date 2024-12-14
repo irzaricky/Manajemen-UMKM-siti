@@ -8,7 +8,9 @@ const props = defineProps({
 });
 
 // Tambahkan ref untuk preview gambar
-const imagePreview = ref(props.produk.gambar ? `/storage/${props.produk.gambar}` : null);
+const imagePreview = ref(
+    props.produk.gambar ? `/storage/${props.produk.gambar}` : null
+);
 
 const form = useForm({
     nama: props.produk.nama,
@@ -27,7 +29,7 @@ function submit() {
 function handleFileChange(e) {
     const file = e.target.files[0];
     form.gambar = file;
-    
+
     // Create preview URL for selected image
     if (file) {
         imagePreview.value = URL.createObjectURL(file);
@@ -132,13 +134,13 @@ function handleFileChange(e) {
                                 >
                                     Gambar Produk
                                 </label>
-                                
+
                                 <!-- Image Preview -->
                                 <div v-if="imagePreview" class="mt-2 mb-4">
-                                    <img 
-                                        :src="imagePreview" 
+                                    <img
+                                        :src="imagePreview"
                                         class="w-32 h-32 object-cover rounded-lg border"
-                                        alt="Preview" 
+                                        alt="Preview"
                                     />
                                 </div>
 

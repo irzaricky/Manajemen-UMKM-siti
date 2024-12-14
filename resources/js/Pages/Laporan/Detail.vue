@@ -1,8 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head } from "@inertiajs/vue3";
+import { Head, router, Link } from "@inertiajs/vue3"; // Add Link
 import { ref } from "vue";
-import { router } from "@inertiajs/vue3";
 
 const props = defineProps({
     transactions: Object,
@@ -56,6 +55,19 @@ function confirmDeleteTransaction(transactionId) {
                                 Transaksi #{{ transactionId }}
                             </h3>
                             <div class="flex gap-2">
+                                <!-- Change Invoice Link to use show route -->
+                                <Link
+                                    :href="
+                                        route(
+                                            'order.invoice.show',
+                                            transactionId
+                                        )
+                                    "
+                                    class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                                >
+                                    Invoice
+                                </Link>
+                                <!-- Existing Delete Button -->
                                 <button
                                     @click="
                                         confirmDeleteTransaction(transactionId)
