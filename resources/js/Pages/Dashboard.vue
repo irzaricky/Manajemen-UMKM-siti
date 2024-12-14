@@ -1,4 +1,5 @@
 <script setup>
+// Change import from Line to Bar
 import { Head } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import Hero from "@/Components/Hero.vue";
@@ -6,13 +7,12 @@ import SalesStatistics from "@/Components/Dashboard/SalesStatistics.vue";
 import { ref, watch, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import debounce from "lodash/debounce";
-import { Line } from "vue-chartjs";
+import { Bar } from "vue-chartjs";
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
+    BarElement,
     Title,
     Tooltip,
     Legend,
@@ -22,8 +22,7 @@ import {
 ChartJS.register(
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
+    BarElement,
     Title,
     Tooltip,
     Legend
@@ -73,6 +72,7 @@ watch(
 );
 
 // Add computed properties for chart data
+// Update chart options for histogram style
 const chartOptions = {
     responsive: true,
     scales: {
@@ -85,6 +85,8 @@ const chartOptions = {
             position: "top",
         },
     },
+    barPercentage: 0.25, // Control bar width
+    categoryPercentage: 1, // Control spacing between bars
 };
 
 const formatHour = (hour) => {
@@ -113,6 +115,20 @@ const transactionChartData = computed(() => ({
             data: props.statistics.daily_transactions || [],
             borderColor: "#10B981",
             backgroundColor: "#10B981",
+            tension: 0.1,
+        },
+    ],
+}));
+
+// Add new computed property for hourly chart data
+const hourlyChartData = computed(() => ({
+    labels: props.statistics.hours || [],
+    datasets: [
+        {
+            label: "Transaksi per Jam",
+            data: props.statistics.hourly_transactions || [],
+            borderColor: "#8B5CF6",
+            backgroundColor: "#8B5CF6",
             tension: 0.1,
         },
     ],
@@ -167,7 +183,7 @@ const transactionChartData = computed(() => ({
                         <h3 class="text-lg font-semibold mb-4">
                             Grafik Pendapatan
                         </h3>
-                        <Line :data="salesChartData" :options="chartOptions" />
+                        <Bar :data="salesChartData" :options="chartOptions" />
                     </div>
 
                     <!-- Transaction Chart -->
@@ -175,26 +191,19 @@ const transactionChartData = computed(() => ({
                         <h3 class="text-lg font-semibold mb-4">
                             Grafik Transaksi
                         </h3>
-                        <Line
+                        <Bar
                             :data="transactionChartData"
                             :options="chartOptions"
                         />
                     </div>
                 </div>
 
-                <!-- Peak Hours Section -->
+                <!-- Peak Hours Chart Section -->
                 <div class="mt-6 bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-semibold mb-4">
-                        Jam Penjualan Tertinggi
+                        Grafik Puncak Jam Penjualan
                     </h3>
-                    <div class="text-center">
-                        <p class="text-3xl font-bold text-indigo-600">
-                            {{ formatHour(statistics.peak_hour) }}
-                        </p>
-                        <p class="text-gray-600 mt-2">
-                            {{ statistics.peak_transactions }} Transaksi
-                        </p>
-                    </div>
+                    <Bar :data="hourlyChartData" :options="chartOptions" />
                 </div>
 
                 <!-- Best Sellers Section -->

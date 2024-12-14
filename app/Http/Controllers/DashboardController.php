@@ -34,15 +34,15 @@ class DashboardController extends Controller
             ->orderBy('transaksi.tanggal')
             ->get();
 
-        // Get peak hours
-        $peakHours = (clone $query)
+        // Update the peak hours query to get all hours
+        $hourlyData = (clone $query)
             ->select([
                 DB::raw('HOUR(transaksi.created_at) as hour'),
                 DB::raw('COUNT(*) as transaction_count')
             ])
             ->groupBy(DB::raw('HOUR(transaksi.created_at)'))
-            ->orderByDesc('transaction_count')
-            ->first();
+            ->orderBy('hour')
+            ->get();
 
         $statistics = [
             'dates' => $chartData->pluck('tanggal')->map(fn($date) => Carbon::parse($date)->format('Y-m-d')),
@@ -50,8 +50,8 @@ class DashboardController extends Controller
             'daily_transactions' => $chartData->pluck('transactions'),
             'total_pendapatan' => $chartData->sum('revenue'),
             'total_transaksi' => $chartData->sum('transactions'),
-            'peak_hour' => $peakHours ? $peakHours->hour : null,
-            'peak_transactions' => $peakHours ? $peakHours->transaction_count : 0
+            'hourly_transactions' => $hourlyData->pluck('transaction_count'),
+            'hours' => $hourlyData->pluck('hour')->map(fn($hour) => sprintf('%02d:00', $hour))
         ];
 
         // Get best selling products
