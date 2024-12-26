@@ -50,7 +50,9 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
 
     Route::prefix('/laporan')->middleware(['auth'])->group(function () {
         Route::get('/penjualan', [LaporanController::class, 'index'])->name('laporan.index');
+
         Route::get('/penjualan/{date}/detail', [LaporanController::class, 'detail'])->name('laporan.detail');
+
         Route::delete('/transaction/{id}', [LaporanController::class, 'destroyTransaction'])->name('laporan.transaction.destroy');
 
         Route::get('/keuntungan', [LaporanKeuntunganController::class, 'index'])
@@ -86,6 +88,8 @@ Route::group(['middleware' => 'auth', 'verified'], function () {
 });
 
 
+Route::get('/laporan/penjualan/export', [LaporanController::class, 'exportExcel'])->name('laporan.export');
+Route::get('/laporan/keuntungan/export', [LaporanKeuntunganController::class, 'exportExcel'])->name('laporan.keuntungan.export');
 
 
 Route::middleware('auth')->group(function () {

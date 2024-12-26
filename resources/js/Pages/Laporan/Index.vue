@@ -35,9 +35,18 @@ function editReport(report) {
                 <div
                     class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6"
                 >
-                    <h2 class="text-xl font-bold mb-4">
-                        Laporan Penjualan Harian
-                    </h2>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">
+                            Laporan Penjualan Harian
+                        </h2>
+                        <a
+                            :href="route('laporan.export')"
+                            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                            target="_blank"
+                        >
+                            Download Excel
+                        </a>
+                    </div>
 
                     <!-- Table -->
                     <div class="overflow-x-auto">
