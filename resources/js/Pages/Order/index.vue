@@ -211,12 +211,25 @@ const cart = computed(() => Object.values(orderItems.value));
                                     :key="produk.id"
                                     class="bg-white shadow rounded-lg p-4"
                                 >
-                                    <img
-                                        loading="lazy"
-                                        src="../../../../public/dummy.png"
-                                        alt="Menu Image"
-                                        class="rounded-lg"
-                                    />
+                                    <div
+                                        class="aspect-square w-full overflow-hidden rounded-lg mb-4"
+                                    >
+                                        <img
+                                            v-if="produk.gambar"
+                                            :src="`/storage/${produk.gambar}`"
+                                            :alt="produk.nama"
+                                            class="h-full w-full object-cover"
+                                            loading="lazy"
+                                        />
+                                        <div
+                                            v-else
+                                            class="h-full w-full bg-gray-100 flex items-center justify-center"
+                                        >
+                                            <span class="text-gray-400"
+                                                >No Image</span
+                                            >
+                                        </div>
+                                    </div>
                                     <div
                                         class="text-xl font-bold py-2 text-gray-700"
                                     >

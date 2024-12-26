@@ -101,16 +101,25 @@ const formatPeriod = (date, period) => {
                     class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6"
                 >
                     <!-- Period Selector -->
-                    <div class="mb-6">
-                        <select
-                            v-model="selectedPeriod"
-                            class="rounded-md border-gray-300"
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <select
+                                v-model="selectedPeriod"
+                                class="rounded-md border-gray-300"
+                            >
+                                <option value="daily">Harian</option>
+                                <option value="weekly">Mingguan</option>
+                                <option value="monthly">Bulanan</option>
+                                <option value="yearly">Tahunan</option>
+                            </select>
+                        </div>
+                        <a
+                            :href="route('laporan.keuntungan.export')"
+                            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                            target="_blank"
                         >
-                            <option value="daily">Harian</option>
-                            <option value="weekly">Mingguan</option>
-                            <option value="monthly">Bulanan</option>
-                            <option value="yearly">Tahunan</option>
-                        </select>
+                            Download Excel
+                        </a>
                     </div>
 
                     <!-- Table -->

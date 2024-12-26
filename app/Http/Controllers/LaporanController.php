@@ -6,6 +6,8 @@ use App\Models\LaporanPenjualanHarian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LaporanPenjualanExport;
 
 class LaporanController extends Controller
 {
@@ -163,5 +165,10 @@ class LaporanController extends Controller
             DB::rollBack();
             return back()->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
         }
+    }
+
+    public function exportExcel()
+    {
+        return Excel::download(new LaporanPenjualanExport, 'laporan-penjualan.xlsx');
     }
 }

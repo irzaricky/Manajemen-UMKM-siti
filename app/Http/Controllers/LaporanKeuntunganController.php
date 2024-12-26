@@ -6,6 +6,8 @@ use App\Models\LaporanKeuntungan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LaporanKeuntunganExport;
 
 class LaporanKeuntunganController extends Controller
 {
@@ -86,7 +88,7 @@ class LaporanKeuntunganController extends Controller
         return $this->processResults($reports, $purchases, 'daily');
     }
 
-    private function processWeeklyReports($salesQuery) 
+    private function processWeeklyReports($salesQuery)
     {
         $purchaseSubQuery = DB::table('pembelian_bahan_baku')
             ->select(
@@ -104,8 +106,8 @@ class LaporanKeuntunganController extends Controller
             DB::raw('COUNT(DISTINCT produks.id) as total_produk'),
             DB::raw('COUNT(DISTINCT transaksi.id) as total_transaksi')
         ])
-        ->groupBy(DB::raw('YEARWEEK(transaksi.tanggal, 1)'))
-        ->get();
+            ->groupBy(DB::raw('YEARWEEK(transaksi.tanggal, 1)'))
+            ->get();
 
         $purchases = $purchaseSubQuery->get()->keyBy('periode');
 
@@ -130,8 +132,8 @@ class LaporanKeuntunganController extends Controller
             DB::raw('COUNT(DISTINCT produks.id) as total_produk'),
             DB::raw('COUNT(DISTINCT transaksi.id) as total_transaksi')
         ])
-        ->groupBy(DB::raw('DATE_FORMAT(transaksi.tanggal, "%Y-%m")'))
-        ->get();
+            ->groupBy(DB::raw('DATE_FORMAT(transaksi.tanggal, "%Y-%m")'))
+            ->get();
 
         $purchases = $purchaseSubQuery->get()->keyBy('periode');
 
@@ -150,14 +152,14 @@ class LaporanKeuntunganController extends Controller
 
         $reports = $salesQuery->select([
             DB::raw('YEAR(transaksi.tanggal) as periode'),
-            DB::raw('MIN(transaksi.tanggal) as tanggal'), 
+            DB::raw('MIN(transaksi.tanggal) as tanggal'),
             DB::raw('SUM(detail_transaksi.jumlah * detail_transaksi.harga_satuan) as total_penjualan'),
             DB::raw('SUM(detail_transaksi.jumlah) as total_item'),
             DB::raw('COUNT(DISTINCT produks.id) as total_produk'),
             DB::raw('COUNT(DISTINCT transaksi.id) as total_transaksi')
         ])
-        ->groupBy(DB::raw('YEAR(transaksi.tanggal)'))
-        ->get();
+            ->groupBy(DB::raw('YEAR(transaksi.tanggal)'))
+            ->get();
 
         $purchases = $purchaseSubQuery->get()->keyBy('periode');
 
@@ -198,5 +200,11 @@ class LaporanKeuntunganController extends Controller
                 DB::raw('SUM(total_harga) as total_pembelian')
             )
             ->groupBy('tanggal');
+    }
+
+
+    public function exportExcel()
+    {
+        return Excel::download(new LaporanKeuntunganExport, 'laporan-keuntungan.xlsx');
     }
 }
