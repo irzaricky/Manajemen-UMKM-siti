@@ -6,7 +6,6 @@ import Hero from "@/Components/Hero.vue";
 import SalesStatistics from "@/Components/Dashboard/SalesStatistics.vue";
 import { ref, watch, computed } from "vue";
 import { router } from "@inertiajs/vue3";
-import debounce from "lodash/debounce";
 import { Bar } from "vue-chartjs";
 import {
     Chart as ChartJS,
